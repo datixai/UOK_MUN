@@ -1,42 +1,35 @@
 # UOK_MUN
 
-Conference platform for UOK MUN, University of Kotli Model United Nations. Developed by Datix AI.
+Conference platform for UOK MUN, University of Kotli Model United Nations. Built with Next.js 14 (App Router) and Firebase. Developed by Datix AI.
 
 Public site: Home, Committees, Schedule, Register, My status.
-Private admin (not linked anywhere): `/uokmunadmin`, signed in with an admin email and password.
-Admin: dashboard, registrations, allocation, roll call, floor (timer, motions, voting), scores and certificates, content (everything visitors see), data backup and CSV.
+Private admin (not linked anywhere): `/uokmunadmin`, signed in with the admin email and a password.
+Admin: dashboard, registrations, allocation, roll call, floor (timer, motions, voting), scores and certificates, content (everything visitors see, committee logos, schedule, announcements), data backup and CSV.
 
 ## Run locally
-Needs Node 18 or newer.
-
 ```
-npm install        (only needed for Firebase mode)
-node server.js     (or double-click start.bat)
+npm install
+npm run dev        (development)     or     npm run build  then  npm start
 ```
 Open http://localhost:3000 and http://localhost:3000/uokmunadmin.
-With no Firebase values in `.env.local`, data is saved in `data/data.json` with a daily copy in `data/backups`.
+Without Firebase credentials the data is saved in `data/data.json` (daily copies in `data/backups`), so you can test offline.
 
-## Environment (`.env.local`)
-Copy `.env.example` to `.env.local` and fill it. `.env.local` is never committed.
+## Admin account
+`ADMIN_EMAIL` (in `.env.local`) is the owner email, `uokmun4@gmail.com`. The first time you open `/uokmunadmin`, only that email can create the account and you choose the password (8 or more characters). To fix the password in the environment instead, also set `ADMIN_PASSWORD`.
 
-| Name | Purpose |
-|---|---|
-| FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY | Firebase service account. When all three are set, data is stored in Firestore (collection `uokmun`, document `state`). |
-| AUTH_SECRET | Long random string that signs admin login tokens (required on Vercel). |
-| ADMIN_EMAIL, ADMIN_PASSWORD | Admin account. If set, this account is used and nobody can create another. If empty, the first visit to `/uokmunadmin` creates it. |
-
-## Firebase setup
-1. Firebase console, create a project, then Build, Firestore Database, Create database (production mode).
-2. Project settings, Service accounts, Generate new private key. From the downloaded JSON copy `project_id`, `client_email` and `private_key` into the three FIREBASE_* values.
-3. Firestore rules can stay closed: the website never talks to Firestore directly, only this server does, with the service account.
+## Connect Firebase (database and pictures)
+Project: `uokmun-4456c`. The website never talks to Firebase from the browser; only the server does, with a service account, so the rules stay closed (`firestore.rules`, `storage.rules`).
+1. Firebase console, Build, Firestore Database, Create database (production mode). Build, Storage, Get started.
+2. Project settings, Service accounts, Generate new private key. Save the downloaded file in this folder as `firebase-service-account.json` (it is git-ignored). Locally that is all.
+3. Data then lives in Firestore (collection `uokmun`, document `state`) and uploaded pictures (committee logos) live in Firebase Storage. The startup line shows `Firebase` when the connection is active.
 
 ## Deploy on Vercel
-1. Push this repo to GitHub, import it in Vercel (framework preset: Other, no build command).
-2. Add every name from `.env.local` under Project, Settings, Environment Variables (`.env.local` itself is not uploaded). For FIREBASE_PRIVATE_KEY paste the whole key with the `\n` characters.
-3. Deploy. The static site is served from `public/` and the API runs as a serverless function (`api/[route].js`). Vercel has no writable disk, so Firebase is required there.
+1. Push the repo to GitHub, import it in Vercel (framework Next.js, defaults).
+2. Add these under Project, Settings, Environment Variables (Vercel does not read `.env.local`): `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (copy from the service-account JSON, keep the `\n` characters), `FIREBASE_STORAGE_BUCKET`, `AUTH_SECRET`, `ADMIN_EMAIL`, optionally `ADMIN_PASSWORD`.
+3. Vercel has no writable disk, so Firebase is required there.
 
 ## Notes
-- Opening `public/index.html` directly (no server) runs in local mode: data stays in that browser only.
 - Delegate emails and phone numbers are never sent to public pages. My status needs email plus phone.
-- Admin login, registration and status lookups are rate limited per server instance. The password is stored hashed (scrypt).
-- All data is one Firestore document, which is plenty for a few thousand registrations. Move registrations to their own collection if you ever expect more.
+- Admin login and registration are rate limited per server instance. The admin password is stored hashed (scrypt).
+- All data is one Firestore document, plenty for a few thousand registrations.
+- `_legacy/` holds the previous single-file version and is not part of the app.

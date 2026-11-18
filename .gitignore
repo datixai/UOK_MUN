@@ -3,3 +3,7 @@ node_modules/
 .env.local
 .env
 .vercel
+_legacy/
+.next/
+firebase-service-account.json
+*-firebase-adminsdk-*.json
