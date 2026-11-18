@@ -16,7 +16,7 @@ export const viewport = { themeColor: '#0F1E45' };
 
 export default async function RootLayout({ children }) {
   const { site: z } = await getPublic();
-  const items = [['/', 'Home'], z.showCommittees && ['/committees', 'Committees'], z.showSchedule && ['/schedule', 'Schedule'], z.showStatus && ['/status', 'My status']].filter(Boolean);
+  const items = [['/', 'Home'], z.showCommittees && ['/committees', 'Committees'], z.showSchedule && ['/schedule', 'Schedule']].filter(Boolean);
   return (
     <html lang="en">
       <body>

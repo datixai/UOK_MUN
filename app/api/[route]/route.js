@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { handle, photo } from '../../../lib/core';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +27,6 @@ async function run(request, { params }) {
   const res = { statusCode: 200, setHeader() {}, end(s) { out = s; } };
   await handle(req, res, route);
   if (request.method === 'PUT' && route === 'state' && res.statusCode === 200) { // the admin saved: refresh the public pages now
-    revalidateTag('public');
     revalidatePath('/', 'layout');
   }
   return new Response(out, { status: res.statusCode, headers: { ...J, 'cache-control': 'no-store' } });

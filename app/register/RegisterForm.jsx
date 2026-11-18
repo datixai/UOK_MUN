@@ -13,7 +13,7 @@ export default function RegisterForm({ note }) {
       setDone(d.name);
     } catch (e) { setMsg(e.message); setBusy(false); }
   }
-  if (done) return <div className="card" style={{ maxWidth: 520, margin: 'auto' }}><div className="msg"><b>Thank you, {done}.</b> Your registration is received. The team will contact you on your email or phone. You can check your status any time with the same email and phone.</div></div>;
+  if (done) return <div className="card" style={{ maxWidth: 520, margin: 'auto' }}><div className="msg"><b>Thank you, {done}.</b> Your registration is received. The team will contact you on your email or phone. If you are accepted, you will be added to a committee and given a login for the delegate portal.</div></div>;
   return (
     <div className="card" style={{ maxWidth: 520, margin: 'auto' }}>
       <form onSubmit={submit}>

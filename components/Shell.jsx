@@ -5,9 +5,25 @@ import { useEffect, useState } from 'react';
 import { waLink } from '../lib/defaults';
 import Link2 from 'next/link';
 
+// Who is signed in on this browser (delegate or chair, admin). Used to show each person only what is meant for them.
+export function useAuth() {
+  const [a, setA] = useState({ member: false, admin: false });
+  useEffect(() => {
+    const f = () => { try { setA({ member: !!sessionStorage.getItem('uokmun_m'), admin: !!sessionStorage.getItem('uokmun_t') }); } catch (e) { /* storage blocked */ } };
+    f(); window.addEventListener('uokmun-auth', f);
+    return () => window.removeEventListener('uokmun-auth', f);
+  }, []);
+  return a;
+}
+// Content for visitors only: hidden once someone is signed in as delegate, chair or admin.
+export function Guest({ children }) {
+  const a = useAuth();
+  return a.member || a.admin ? null : children;
+}
+
 export function Nav({ items }) {
-  const path = usePathname();
-  return <nav>{items.map(([p, t]) => <Link key={p} href={p} className={path === p ? 'on' : ''}>{t}</Link>)}</nav>;
+  const path = usePathname(), a = useAuth(), signedIn = a.member || a.admin;
+  return <nav>{items.filter(([, , guestOnly]) => !(guestOnly && signedIn)).map(([p, t]) => <Link key={p} href={p} className={path === p ? 'on' : ''}>{t}</Link>)}</nav>;
 }
 
 // Fades sections in as they scroll into view (elements with class "rv").
@@ -39,7 +55,8 @@ const WA_ICON = <svg viewBox="0 0 24 24" width="30" height="30" fill="#fff" aria
 
 // Floating WhatsApp button on the right side with the contact people.
 export function WhatsApp({ contacts }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false), path = usePathname(), auth = useAuth();
+  if (path.startsWith('/delegate') || path.startsWith('/uokmunadmin') || auth.member || auth.admin) return null; // only for visitors on the public site
   const list = (contacts || []).filter(c => c.phone);
   if (!list.length) return null;
   const msg = 'Assalam o Alaikum, I have a question about UOK MUN.';
@@ -68,7 +85,7 @@ export function ProfileMenu() {
         const r = await fetch('/api/whoami', { headers: { Authorization: 'Bearer ' + t } });
         if (!r.ok) throw new Error('x');
         if (alive) setMe(await r.json());
-      } catch (e) { try { sessionStorage.removeItem('uokmun_m'); } catch (x) {} if (alive) setMe(null); }
+      } catch (e) { try { sessionStorage.removeItem('uokmun_m'); } catch (x) {} if (alive) setMe(null); window.dispatchEvent(new Event('uokmun-auth')); }
     }
     check();
     window.addEventListener('uokmun-auth', check);

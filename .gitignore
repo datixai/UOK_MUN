@@ -9,3 +9,4 @@ firebase-service-account.json
 *-firebase-adminsdk-*.json
 firebase-service-account*.json
 scripts/avatars/
+.env.vercel

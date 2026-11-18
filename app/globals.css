@@ -157,3 +157,5 @@ header{backdrop-filter:none}
 .pm-menu a,.pm-menu button{display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:0;color:#e6ebf8;font:600 14px inherit;cursor:pointer;text-decoration:none}
 .pm-menu a:hover,.pm-menu button:hover{background:rgba(201,167,104,.18)}
 @media(max-width:600px){.pm-n{display:none}.pm-b{padding:3px}}
+
+header{background:#0A1430}

@@ -14,7 +14,7 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
 
 (async () => {
   /* ---------- pages ---------- */
-  for (const p of ['/', '/committees', '/schedule', '/register', '/status', '/delegate', '/uokmunadmin']) { const r = await page(p); ok('page ' + p + ' 200', r.s === 200, r.s); ok('page ' + p + ' has footer credit', r.t.includes('Datix AI')); }
+  for (const p of ['/', '/committees', '/schedule', '/register', '/delegate', '/uokmunadmin']) { const r = await page(p); ok('page ' + p + ' 200', r.s === 200, r.s); ok('page ' + p + ' has footer credit', r.t.includes('Datix AI')); }
   const home = await page('/');
   ok('home has WhatsApp contacts', home.t.includes('0355 6650661') || home.t.includes('wa.me'));
   ok('home has no admin link', !/href="\/uokmunadmin"/.test(home.t));
@@ -36,9 +36,6 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   ok('register missing name', (await call('register', 'POST', { email: 'c@x.co', phone: '03001234567' })).s === 400);
   ok('register bad json', (await call('register', 'POST', null, null, '{bad')).s === 400);
   ok('register xss payload stored as text', (await call('register', 'POST', { name: '<img src=x onerror=alert(1)>', email: 'xss@x.co', phone: '03001234567' })).s === 200);
-  const st1 = await call('status', 'POST', { email: 'ALI@x.co', phone: '+92 300 1234567' }); ok('status finds (case and format tolerant)', st1.s === 200 && st1.j.name === 'Ali Test', st1);
-  ok('status wrong phone', (await call('status', 'POST', { email: 'ali@x.co', phone: '03009999999' })).s === 404);
-  ok('status hides other fields', !JSON.stringify(st1.j).includes('@'));
 
   /* ---------- admin account ---------- */
   ok('public says admin not set', (await call('public')).j.adminSet === false);
@@ -103,8 +100,12 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   const afterSave = (await call('state', 'GET', null, AT)).j; await call('state', 'PUT', { state: { members: afterSave.members }, known: [] }, AT);
   ok('admin re-save keeps delegate password', (await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'delegate-pass-1' })).s === 200);
   ok('admin view shows hasAccount, never pw', JSON.stringify(afterSave).includes('"hasAccount":true') && !JSON.stringify(afterSave).includes('"pw"'));
-  const pub = (await call('public')).j; ok('public chairs listed without email', pub.chairs.length === 1 && !JSON.stringify(pub).includes('@uokmun.test'));
+  const pub = (await call('public')).j; ok('public data has no chairs, delegates or emails', pub.chairs === undefined && !JSON.stringify(pub).includes('@uokmun.test') && !JSON.stringify(pub).includes('Chair Person'));
+  ok('status lookup no longer exists', (await call('status', 'POST', { email: 'ali@x.co', phone: '03001234567' })).s === 404);
+  ok('status page is gone', (await page('/status')).s === 404);
   ok('public hides delegates', !JSON.stringify(pub).includes('Person d1'));
+  ok('status lookup no longer exists', (await call('status', 'POST', { email: 'ali@x.co', phone: '03001234567' })).s === 404);
+  ok('status page is gone', (await page('/status')).s === 404);
   const home2 = await page('/committees'); ok('committees page escapes content', !home2.t.includes('<script>alert(1)'));
   // password reset by admin logs the delegate out and needs a new code
   const m2 = afterSave.members.map(m => m.id === 'T-d1' ? { ...m, resetPw: true, code: '777777' } : m);
