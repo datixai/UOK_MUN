@@ -1,9 +1,20 @@
 {
   "name": "uok-mun",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "UOK_MUN conference platform (Next.js). Developed by Datix AI.",
   "private": true,
-  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
-  "dependencies": { "firebase-admin": "^12.7.0", "next": "14.2.15", "react": "^18.3.1", "react-dom": "^18.3.1" },
-  "engines": { "node": ">=18" }
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "next": "14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "engines": {
+    "node": "22.x"
+  }
 }

@@ -33,3 +33,12 @@ Project: `uokmun-4456c`. The website never talks to Firebase from the browser; o
 - Admin login and registration are rate limited per server instance. The admin password is stored hashed (scrypt).
 - All data is one Firestore document, plenty for a few thousand registrations.
 - `_legacy/` holds the previous single-file version and is not part of the app.
+
+## Tests and security
+- `node scripts/test-all.js http://localhost:3100` runs 100+ API and security checks (logins, tokens, data isolation between committees, input cleaning, rate limits). Run it against a throw-away test server (see the header of the file), never the live database.
+- `node scripts/check-firebase.js` checks the Firebase connection.
+- `node scripts/seed-test-data.js` creates test members and a test admin (password `test123#`). Change the admin password in Admin, Data before real use, and remove the test members (`--remove`).
+- Logins use scrypt-hashed passwords and signed tokens that stop working when a password changes. All admin input is rebuilt field by field on the server. Security headers and a content security policy are set in `next.config.js`.
+
+## Speed
+Public pages are pre-built and cached (refreshed every minute and at once when the admin saves), so visitors never wait for the database and logged-in users do not slow them down. Pictures stored inline are served from a cacheable URL. The admin screen checks for news with a tiny request every 30 seconds.

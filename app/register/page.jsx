@@ -1,7 +1,7 @@
 import { getPublic } from '../../lib/data';
 import RegisterForm from './RegisterForm';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 export const metadata = { title: 'Register | UOK MUN' };
 
 export default async function Register() {

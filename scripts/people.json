@@ -1,0 +1,23 @@
+[
+  { "slug": "ayesha-khan", "name": "Ayesha Khan", "gender": "f", "committee": "unsc", "role": "Chair", "country": "", "persona": "", "scarf": false },
+  { "slug": "hamza-rauf", "name": "Hamza Rauf", "gender": "m", "committee": "unsc", "role": "Delegate", "country": "France", "persona": "", "beard": false },
+  { "slug": "sana-iqbal", "name": "Sana Iqbal", "gender": "f", "committee": "unsc", "role": "Delegate", "country": "United Kingdom", "persona": "", "scarf": true },
+  { "slug": "usman-tariq", "name": "Usman Tariq", "gender": "m", "committee": "unhrc", "role": "Chair", "country": "", "persona": "", "beard": true },
+  { "slug": "zainab-fatima", "name": "Zainab Fatima", "gender": "f", "committee": "unhrc", "role": "Delegate", "country": "Germany", "persona": "", "scarf": true },
+  { "slug": "bilal-ahmed", "name": "Bilal Ahmed", "gender": "m", "committee": "unhrc", "role": "Delegate", "country": "Brazil", "persona": "", "beard": false },
+  { "slug": "hira-malik", "name": "Hira Malik", "gender": "f", "committee": "oic", "role": "Chair", "country": "", "persona": "", "scarf": false },
+  { "slug": "ali-raza", "name": "Ali Raza", "gender": "m", "committee": "oic", "role": "Delegate", "country": "Saudi Arabia", "persona": "", "beard": true },
+  { "slug": "maryam-noor", "name": "Maryam Noor", "gender": "f", "committee": "oic", "role": "Delegate", "country": "Turkey", "persona": "", "scarf": true },
+  { "slug": "daniyal-shah", "name": "Daniyal Shah", "gender": "m", "committee": "pna", "role": "Chair", "country": "", "persona": "", "beard": false },
+  { "slug": "hassan-mehmood", "name": "Hassan Mehmood", "gender": "m", "committee": "pna", "role": "Delegate", "country": "Pakistan Tehreek-e-Insaf (PTI)", "persona": "Imran Khan", "beard": false },
+  { "slug": "kamran-javed", "name": "Kamran Javed", "gender": "m", "committee": "pna", "role": "Delegate", "country": "Pakistan Muslim League (N)", "persona": "Nawaz Sharif", "beard": true },
+  { "slug": "nimra-aslam", "name": "Nimra Aslam", "gender": "f", "committee": "uncsw", "role": "Chair", "country": "", "persona": "", "scarf": true },
+  { "slug": "amna-yousaf", "name": "Amna Yousaf", "gender": "f", "committee": "uncsw", "role": "Delegate", "country": "Norway", "persona": "", "scarf": false },
+  { "slug": "saad-hussain", "name": "Saad Hussain", "gender": "m", "committee": "uncsw", "role": "Delegate", "country": "Japan", "persona": "", "beard": false },
+  { "slug": "hafsa-rehman", "name": "Hafsa Rehman", "gender": "f", "committee": "unga", "role": "Chair", "country": "", "persona": "", "scarf": true },
+  { "slug": "ahmed-zahid", "name": "Ahmed Zahid", "gender": "m", "committee": "unga", "role": "Delegate", "country": "Egypt", "persona": "", "beard": false },
+  { "slug": "iqra-bashir", "name": "Iqra Bashir", "gender": "f", "committee": "unga", "role": "Delegate", "country": "Canada", "persona": "", "scarf": false },
+  { "slug": "talha-mir", "name": "Talha Mir", "gender": "m", "committee": "crisis", "role": "Chair", "country": "", "persona": "", "beard": true },
+  { "slug": "mehwish-arif", "name": "Mehwish Arif", "gender": "f", "committee": "crisis", "role": "Delegate", "country": "Director of Intelligence", "persona": "", "scarf": false },
+  { "slug": "zeeshan-haider", "name": "Zeeshan Haider", "gender": "m", "committee": "crisis", "role": "Delegate", "country": "Minister of Defence", "persona": "", "beard": false }
+]

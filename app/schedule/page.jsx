@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getPublic } from '../../lib/data';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 export const metadata = { title: 'Schedule | UOK MUN' };
 
 export default async function Schedule() {
