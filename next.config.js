@@ -15,6 +15,7 @@ const csp = [
 module.exports = {
   experimental: { serverComponentsExternalPackages: ['firebase-admin'] },
   poweredByHeader: false,
+  async redirects() { return [{ source: '/documents', destination: '/press-release', permanent: true }]; },
   async headers() {
     return [{ source: '/:path*', headers: [
       { key: 'Content-Security-Policy', value: csp },
