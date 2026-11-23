@@ -12,7 +12,7 @@ Web app for UOK MUN (University of Kotli Model United Nations), built for the UO
 
 ## Key decisions
 1. No public status lookup and no public chair names: chairs and delegates are visible only to the admin and to members of the same committee.
-2. Admin login is email plus password; the owner email is fixed by `ADMIN_EMAIL`. Delegates are created by the admin, activate with a one-time access code, then choose their own password.
+2. Admin login is email plus password; the owner email is fixed by `ADMIN_EMAIL`. Delegates are created by the admin, who sets each person's password in the Members tab (stored only as a hash); they sign in with email and password. There is no access code.
 3. Public pages are pre-built and cached; saving in admin refreshes them at once (`revalidatePath`).
 4. Tokens are signed and tied to the password hash, so a password change logs everyone out.
 5. Data lives in one Firestore document (`uokmun/state`); a 4 second read cache keeps requests fast.
@@ -53,7 +53,8 @@ _legacy/        old single-file version (git-ignored)
 - Git: commit as the local identity, no Claude attribution, ask before every push.
 
 ## Progress log
-- 2026-11-23: added the Documents page (admin managed links, toggle) and the Awards section (Best Delegate, Outstanding Diplomacy, Special Mention); made the editable Guide to Delegate Preparation (`scripts/make-delegate-guide.py` writes `public/docs/UOKMUN-Delegate-Guide.docx`, dates and times marked To be announced).
+- 2026-11-23: removed the access-code activation; the admin sets each member's password (Generate, Set password, Remove access, Send login on WhatsApp); guide published as PDF (editable Word source in `docs/`).
+- 2026-11-23: added the Documents page (admin managed links, toggle) and the Awards section (Best Delegate, Outstanding Diplomacy, Special Mention); made the editable Guide to Delegate Preparation (`scripts/make-delegate-guide.py` writes `docs/UOKMUN-Delegate-Guide.docx` (editable), export to PDF as `public/docs/UOKMUN-Delegate-Guide.pdf`, dates and times marked To be announced).
 - 2026-11-21: added this file; made the promo reel in `marketing/reel/` (`seed-demo.cjs` fills a file-mode demo DB, `record.mjs` records it with Playwright at 30 fps, `compose.py` renders; re-run order: seed, start demo server on port 3200, record, compose). Made the phone header compact (brand and login on one row), cleaned leftover QA test text from the real database.
 - 2026-11-20: removed the status page and public chair names, added the Crisis Cell logo, hid visitor-only items for signed-in users, added a read cache.
 - 2026-11-19: delegate portal, members, profile menu, WhatsApp button, caching, security hardening, tests, test accounts, Vercel env file.

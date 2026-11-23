@@ -1,4 +1,4 @@
-# Builds the editable Word document public/docs/UOKMUN-Delegate-Guide.docx (the "Guide to Delegate Preparation" shown on the Documents page).
+# Builds the editable Word document docs/UOKMUN-Delegate-Guide.docx. Export it to PDF (Word: File, Save as PDF) as public/docs/UOKMUN-Delegate-Guide.pdf, which is the file shown on the Documents page.
 # Run: python scripts/make-delegate-guide.py     Requires: python-docx
 # The content below is plain Python; edit the text here or open the .docx in Word and edit it there (dates and times are marked "To be announced").
 import os, re
@@ -10,7 +10,7 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'public', 'docs', 'UOKMUN-Delegate-Guide.docx')
+OUT = os.path.join(ROOT, 'docs', 'UOKMUN-Delegate-Guide.docx')  # editable source; the PDF for the website is exported from it into public/docs/
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 NAVY, GOLD = RGBColor(0x0F, 0x1E, 0x45), RGBColor(0xA8, 0x84, 0x45)
 mm, W = 1, 210
@@ -22,7 +22,10 @@ sec.page_width, sec.page_height = Mm(210), Mm(297)
 sec.left_margin = sec.right_margin = Mm(20); sec.top_margin = Mm(22); sec.bottom_margin = Mm(20)
 def setfont(st, size, bold=False, color=None, italic=False):
     st.font.name = 'Georgia'; st.font.size = Pt(size); st.font.bold = bold; st.font.italic = italic
-    st.element.rPr.rFonts.set(qn('w:eastAsia'), 'Georgia')
+    rf = st.element.rPr.rFonts
+    for a in ('asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'cstheme'):
+        if rf.get(qn('w:' + a)) is not None: del rf.attrib[qn('w:' + a)]
+    for a in ('ascii', 'hAnsi', 'eastAsia', 'cs'): rf.set(qn('w:' + a), 'Georgia')
     if color is not None: st.font.color.rgb = color
 setfont(doc.styles['Normal'], 10.5)
 setfont(doc.styles['Heading 1'], 20, True, NAVY); setfont(doc.styles['Heading 2'], 12.5, True, GOLD)
@@ -74,7 +77,7 @@ def P(t, s=body):
     if s == 'center': par.alignment = WD_ALIGN_PARAGRAPH.CENTER; runs(par, t, color=NAVY, size=13)
     elif s == small: runs(par, t, size=9, base_italic=False)
     elif s == h2: par.style = doc.styles['Heading 2']; runs(par, t)
-    else: par.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY; runs(par, t)
+    else: par.alignment = WD_ALIGN_PARAGRAPH.LEFT if '<br' in t else WD_ALIGN_PARAGRAPH.JUSTIFY; runs(par, t)
     return None
 def B(items):
     for t in items:
@@ -157,7 +160,7 @@ S += [P('Each committee is led by a dais. The dais members are:'),
 
 # ---------------- Conference information
 S += [H1('CONFERENCE INFORMATION'), P('Schedule', h2),
- P('<b>The dates, times and venues of UOK MUN are not final yet.</b> They will be announced by the Secretariat and published on the Schedule page of the website and in the delegate portal. This guide is an editable document and will be updated when the schedule is confirmed. The outline below shows the usual flow of the days.'),
+ P('<b>The dates, times and venues of UOK MUN are not final yet.</b> They will be announced by the Secretariat and published on the Schedule page of the website and in the delegate portal. This guide will be updated when the schedule is confirmed. The outline below shows the usual flow of the days.'),
  *box('Conference dates', ['Dates: <b>To be announced</b>', 'Venue: <b>To be announced</b> (University of Kotli, Azad Jammu and Kashmir)', 'Registration deadline: <b>To be announced</b>', 'Position paper deadline: <b>To be announced</b>']),
  *table([['Day', 'Date', 'Time', 'Programme'],
   ['Day 1', 'To be announced', 'To be announced', 'Registration and opening ceremony. Committee session I.'],

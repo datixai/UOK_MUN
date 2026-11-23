@@ -48,7 +48,7 @@ const avatar = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 
 
   console.log('Admin adds a delegate; the delegate side reacts');
   const qaId = 'T-' + tag;
-  r = await save(c => ({ members: [...c.members, { id: qaId, name: 'QA Delegate', email, phone: '03005551234', role: 'Delegate', committee: 'pna', country: 'QA Party', persona: 'QA Persona', details: 'private note ' + tag, photo: avatar, source: 'WhatsApp', code: '424242' }] })); ok('admin adds delegate with photo', r.s === 200, r);
+  r = await save(c => ({ members: [...c.members, { id: qaId, name: 'QA Delegate', email, phone: '03005551234', role: 'Delegate', committee: 'pna', country: 'QA Party', persona: 'QA Persona', details: 'private note ' + tag, photo: avatar, source: 'WhatsApp', setPw: 'qa-password-1' }] })); ok('admin adds delegate with photo', r.s === 200, r);
   const hl = await call('mlogin', 'POST', { email: 'hassan.mehmood@uokmun.test', password: PASS }); ok('existing delegate signs in', hl.s === 200);
   const HT = hl.j.token;
   let me = (await call('me', 'GET', null, HT)).j;
@@ -57,7 +57,7 @@ const avatar = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 
   const photoUrl = me.delegates.find(d => d.id === qaId).photo; ok('photo is served from a cacheable URL', photoUrl.startsWith('/api/photo?'), photoUrl);
   const pr = await fetch(BASE + photoUrl); ok('photo loads as an image with long cache', pr.status === 200 && pr.headers.get('content-type') === 'image/jpeg' && /immutable/.test(pr.headers.get('cache-control')), pr.status);
   ok('photo link with wrong signature is refused', (await fetch(BASE + photoUrl.replace(/&t=[^&]+/, '&t=wrong'))).status === 404);
-  const act = await call('activate', 'POST', { email, code: '424242', password: 'qa-password-1' }); ok('new delegate activates with the access code', act.s === 200, act);
+  const act = await call('mlogin', 'POST', { email, password: 'qa-password-1' }); ok('new delegate signs in with the password the admin set', act.s === 200, act);
   const QT = act.j.token; const qme = (await call('me', 'GET', null, QT)).j;
   ok('new delegate sees own details and committee mates', qme.me.details === 'private note ' + tag && qme.delegates.some(d => d.name === 'Hassan Mehmood'));
   ok('whoami for the profile menu', (await call('whoami', 'GET', null, QT)).j.name === 'QA Delegate');

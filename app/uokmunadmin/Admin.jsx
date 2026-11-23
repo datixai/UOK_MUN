@@ -36,6 +36,8 @@ export default function Admin() {
       const have = new Set(st.regs.map(x => x.id)), extra = r.regs.filter(x => !have.has(x.id));
       known.current = new Set([...st.regs, ...extra].map(x => x.id));
       if (extra.length) setS(s => ({ ...s, regs: [...s.regs, ...extra] }));
+      const sent = new Map((st.members || []).map(m => [m.id, m]));
+      setS(s => s && ({ ...s, members: s.members.map(m => { const o = sent.get(m.id); if (!o || (!m.setPw && !m.resetPw)) return m; const { setPw, resetPw, ...rest } = m; return { ...rest, ...(setPw !== o.setPw ? { setPw } : {}), ...(resetPw !== o.resetPw ? { resetPw } : {}), ...(o.setPw && !rest.hasAccount ? { hasAccount: true } : {}) }; }) }));
       setSync('Saved');
     } catch (e) { if (e.status === 401) { setToken(''); say('Session expired. Log in again.'); } else setSync('Save failed'); }
   }
@@ -107,7 +109,7 @@ function Dash({ S }) {
   return (
     <>
       <div className="stats">
-        {[['Registrations', R.length], ['Pending', R.filter(r => r.status === 'pending').length], ['Delegates', dl.length], ['Chairs', M.length - dl.length], ['Accounts active', M.filter(m => m.hasAccount).length], ['Paid', R.filter(r => r.paid).length]].map(([t, v]) => <div className="stat" key={t}><b>{v}</b>{t}</div>)}
+        {[['Registrations', R.length], ['Pending', R.filter(r => r.status === 'pending').length], ['Delegates', dl.length], ['Chairs', M.length - dl.length], ['Can sign in', M.filter(m => m.hasAccount).length], ['Paid', R.filter(r => r.paid).length]].map(([t, v]) => <div className="stat" key={t}><b>{v}</b>{t}</div>)}
       </div>
       <h3>By committee</h3>
       <div className="tw"><table><thead><tr><th>Committee</th><th>Seats</th><th>Delegates</th><th>Chairs</th><th>Fill</th></tr></thead><tbody>
@@ -124,7 +126,7 @@ function Regs({ S, upd, say }) {
   const set = (id, fn) => upd(n => fn(n.regs.find(r => r.id === id)));
   const toMember = r => {
     if (S.members.some(m => (m.email || '').toLowerCase() === r.email.toLowerCase())) { say('Already in Members'); return; }
-    upd(n => { n.members.push({ id: 'M' + Date.now(), name: r.name, email: r.email, phone: r.phone, role: 'Delegate', committee: r.p1 || '', country: '', persona: '', details: '', photo: '', source: 'Online registration', code: code6() }); n.regs.find(x => x.id === r.id).status = 'approved'; });
+    upd(n => { n.members.push({ id: 'M' + Date.now(), name: r.name, email: r.email, phone: r.phone, role: 'Delegate', committee: r.p1 || '', country: '', persona: '', details: '', photo: '', source: 'Online registration' }); n.regs.find(x => x.id === r.id).status = 'approved'; });
     say('Added to Members. Open the Members tab to set committee, country and photo.');
   };
   return (
@@ -162,14 +164,14 @@ function Roll({ S, upd }) {
 
 const ROLES = ['Delegate', 'Chair', 'Vice Chair', 'Rapporteur', 'Secretary'];
 const SOURCES = ['Online registration', 'WhatsApp', 'Offline', 'Other'];
-const code6 = () => String(Math.floor(100000 + Math.random() * 900000));
+const genPw = () => { const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const a = new Uint32Array(10); crypto.getRandomValues(a); return [...a].map(x => c[x % c.length]).join(''); };
 const Face = ({ m }) => m.photo ? <img className="av" src={m.photo} alt="" /> : <span className="av">{(m.name || '?').slice(0, 1)}</span>;
 
 function Members({ S, upd, say, tokenOf }) {
   const [cid, setCid] = useState(''), [q, setQ] = useState(''), [open, setOpen] = useState(null);
   const L = S.members.filter(m => (!cid || m.committee === cid) && (!q || (m.name + m.email + m.country + m.persona).toLowerCase().includes(q.toLowerCase())));
   const set = (id, k, v) => upd(n => { n.members.find(m => m.id === id)[k] = v; });
-  const add = () => { const id = 'M' + Date.now(); upd(n => { n.members.push({ id, name: '', email: '', phone: '', role: 'Delegate', committee: cid, country: '', persona: '', details: '', photo: '', source: 'WhatsApp', code: code6() }); }); setOpen(id); };
+  const add = () => { const id = 'M' + Date.now(); upd(n => { n.members.push({ id, name: '', email: '', phone: '', role: 'Delegate', committee: cid, country: '', persona: '', details: '', photo: '', source: 'WhatsApp' }); }); setOpen(id); };
   function photo(id, file) {
     if (!file) return; const im = new Image();
     im.onload = async () => {
@@ -181,7 +183,8 @@ function Members({ S, upd, say, tokenOf }) {
     };
     im.src = URL.createObjectURL(file);
   }
-  const invite = m => waLink(m.phone, 'Assalam o Alaikum ' + m.name + '. You are registered for UOK MUN as ' + m.role + (m.committee ? ' in ' + cname(S, m.committee) : '') + '. Open ' + location.origin + '/delegate, choose "First time? Activate" and use your email ' + m.email + ' with this access code: ' + m.code + '. You then choose your own password.');
+  const [pws, setPws] = useState({});
+  const invite = (m, pw) => waLink(m.phone, 'Assalam o Alaikum ' + m.name + '. You are registered for UOK MUN as ' + m.role + (m.committee ? ' in ' + cname(S, m.committee) : '') + '. Sign in at ' + location.origin + '/delegate with your email ' + m.email + ' and password ' + pw + '. Please keep it private.');
   const dup = m => m.email && S.members.some(x => x.id !== m.id && (x.email || '').toLowerCase() === m.email.toLowerCase());
   return (
     <>
@@ -191,7 +194,7 @@ function Members({ S, upd, say, tokenOf }) {
       <button className="btn" onClick={add}>Add member</button> <button className="btn alt" onClick={() => window.print()}>Print list</button><br /><br />
       {L.map(m => <div className="card" style={{ marginBottom: 10 }} key={m.id}>
         <div className="mem"><Face m={m} />
-          <div style={{ flex: 1 }}><b>{m.name || 'New member'}</b> <span className={'tag ' + (m.role === 'Delegate' ? '' : 'ok')}>{m.role}</span>{m.committee && <span className="tag">{cname(S, m.committee)}</span>}<span className={'tag ' + (m.hasAccount ? 'ok' : 'warn')}>{m.hasAccount ? 'account active' : 'not activated'}</span>
+          <div style={{ flex: 1 }}><b>{m.name || 'New member'}</b> <span className={'tag ' + (m.role === 'Delegate' ? '' : 'ok')}>{m.role}</span>{m.committee && <span className="tag">{cname(S, m.committee)}</span>}<span className={'tag ' + (m.hasAccount ? 'ok' : 'warn')}>{m.hasAccount ? 'can sign in' : 'no password yet'}</span>
             <div className="mini">{[m.country, m.persona && 'as ' + m.persona, m.email].filter(Boolean).join(' | ')}</div></div>
           <div className="noprint"><button className="btn sm alt" onClick={() => setOpen(open === m.id ? null : m.id)}>{open === m.id ? 'Close' : 'Edit'}</button> <button className="btn sm bad" onClick={() => { if (confirm('Delete ' + (m.name || 'this member') + '?')) upd(n => { n.members = n.members.filter(x => x.id !== m.id); }); }}>Delete</button></div></div>
         {open === m.id && <div className="noprint">
@@ -208,9 +211,13 @@ function Members({ S, upd, say, tokenOf }) {
           <label>Other details (visible to the member only)</label><textarea value={m.details} onChange={e => set(m.id, 'details', e.target.value)} />
           <label>Photo</label><Face m={m} /> <input type="file" accept="image/*" style={{ width: 'auto' }} onChange={e => photo(m.id, e.target.files[0])} />
           <div style={{ marginTop: 12 }}>
-            {m.hasAccount ? <><span className="tag ok">Account active</span> <button className="btn sm alt" onClick={() => { if (confirm('Reset the password? They will need the new access code.')) upd(n => { const x = n.members.find(y => y.id === m.id); x.resetPw = true; x.hasAccount = false; x.code = code6(); }); }}>Reset password</button></>
-              : <>Access code: <b style={{ letterSpacing: 2 }}>{m.code || 'none'}</b> <button className="btn sm alt" onClick={() => set(m.id, 'code', code6())}>New code</button></>}
-            {' '}{m.phone && m.email && m.code && !m.hasAccount && <a className="btn sm ok" href={invite(m)} target="_blank" rel="noopener noreferrer">Send login on WhatsApp</a>}
+            <label>Password (the member signs in with their email and this password)</label>
+            <div className="row"><input value={pws[m.id] || ''} placeholder={m.hasAccount ? 'Type a new password to change it' : 'Type a password (8 or more characters)'} onChange={e => setPws({ ...pws, [m.id]: e.target.value })} />
+              <button className="btn sm alt" onClick={() => setPws({ ...pws, [m.id]: genPw() })}>Generate</button>
+              <button className="btn sm" onClick={() => { const v = (pws[m.id] || '').trim(); if (v.length < 8) { say('A password needs at least 8 characters'); return; } if (!m.email) { say('Add the email first'); return; } set(m.id, 'setPw', v); say('Password set. Send it to the member now, it cannot be shown again.'); }}>Set password</button>
+              {m.hasAccount && <button className="btn sm bad" onClick={() => { if (confirm('Remove this person\'s access? They will not be able to sign in until you set a new password.')) upd(n => { const x = n.members.find(y => y.id === m.id); x.resetPw = true; x.hasAccount = false; }); }}>Remove access</button>}</div>
+            <span className={'tag ' + (m.hasAccount ? 'ok' : 'warn')}>{m.hasAccount ? 'Can sign in' : 'No password yet'}</span>
+            {' '}{m.phone && m.email && (pws[m.id] || '').trim().length >= 8 && <a className="btn sm ok" href={invite(m, pws[m.id].trim())} target="_blank" rel="noopener noreferrer">Send login on WhatsApp</a>}
           </div>
         </div>}
       </div>)}

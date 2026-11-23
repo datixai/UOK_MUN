@@ -10,7 +10,7 @@ const call = async (path, method = 'GET', body, tok, raw) => {
   return { s: r.status, j, h: r.headers };
 };
 const page = async p => { const r = await fetch(BASE + p); return { s: r.status, t: await r.text(), h: r.headers }; };
-const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '@uokmun.test', phone: '', role: 'Delegate', committee: 'pna', country: 'C-' + p, persona: '', details: 'private ' + p, photo: '', source: 'Other', code: '', ...extra });
+const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '@uokmun.test', phone: '', role: 'Delegate', committee: 'pna', country: 'C-' + p, persona: '', details: 'private ' + p, photo: '', source: 'Other', ...extra });
 
 (async () => {
   /* ---------- pages ---------- */
@@ -55,7 +55,7 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   /* ---------- admin state ---------- */
   const state = (await call('state', 'GET', null, AT)).j; ok('admin sees registrations', state.regs.length >= 2, state.regs.length);
   ok('admin sees applicant email', state.regs.some(r => r.email === 'ali@x.co'));
-  const members = [mk('d1', { code: '123456', country: 'PTI', persona: 'Imran Khan' }), mk('d2'), mk('c1', { role: 'Chair' }), mk('u1', { committee: 'unsc' }), mk('x1', { name: '<script>alert(1)</script>', photo: 'javascript:alert(1)' })];
+  const members = [mk('d1', { setPw: 'delegate-pass-1', country: 'PTI', persona: 'Imran Khan' }), mk('d2'), mk('c1', { role: 'Chair' }), mk('u1', { committee: 'unsc' }), mk('x1', { name: '<script>alert(1)</script>', photo: 'javascript:alert(1)' })];
   const site = { tagline: 'T', cta: 'Go', showCommittees: true, showSchedule: true, showStatus: true, regOpen: true, showChairs: true, email: 'e@x.co', contacts: [{ name: 'N', role: 'R', phone: '0355 6650661' }], hack: 'dropme' };
   const committees = [{ id: 'pna', name: 'PNA', full: 'Pakistan National Assembly', seats: 5, a1: 'A1', a2: '', countries: 'PTI\nPML-N' }, { id: 'unsc', name: 'UNSC', full: 'Security Council', seats: 2 }];
   const put = await call('state', 'PUT', { state: { site, committees, members, regs: state.regs }, known: state.regs.map(r => r.id) }, AT); ok('PUT state ok', put.s === 200, put);
@@ -74,14 +74,10 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   ok('upload rejects svg', (await call('upload', 'POST', { name: 'a.svg', dataUrl: 'data:image/svg+xml;base64,AAAA' }, AT)).s === 400);
 
   /* ---------- delegate accounts ---------- */
-  ok('activate wrong code 403', (await call('activate', 'POST', { email: 'd1@uokmun.test', code: '000000', password: 'delegate-pass-1' })).s === 403);
-  ok('activate unknown email 403', (await call('activate', 'POST', { email: 'nobody@uokmun.test', code: '123456', password: 'delegate-pass-1' })).s === 403);
-  ok('activate short password 400', (await call('activate', 'POST', { email: 'd1@uokmun.test', code: '123456', password: 'short' })).s === 400);
-  const act = await call('activate', 'POST', { email: 'D1@uokmun.test', code: '123456', password: 'delegate-pass-1' }); ok('activate ok', act.s === 200, act);
-  ok('code cannot be reused', (await call('activate', 'POST', { email: 'd1@uokmun.test', code: '123456', password: 'takeover-pass-1' })).s === 403);
-  ok('delegate without code cannot activate', (await call('activate', 'POST', { email: 'd2@uokmun.test', code: '', password: 'delegate-pass-2' })).s === 403);
+  ok('the access-code route is gone', (await call('activate', 'POST', { email: 'd1@uokmun.test', code: '123456', password: 'delegate-pass-1' })).s === 404);
+  ok('admin-set password must have 8 characters', (await call('state', 'PUT', { state: { members: [{ ...mk('zz'), setPw: 'short' }] }, known: [] }, AT)).s === 400);
   ok('mlogin wrong password', (await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'nope' })).s === 401);
-  ok('mlogin not activated', (await call('mlogin', 'POST', { email: 'd2@uokmun.test', password: 'anything-1' })).s === 401);
+  ok('mlogin without a password set', (await call('mlogin', 'POST', { email: 'd2@uokmun.test', password: 'anything-1' })).s === 401);
   const ml = await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'delegate-pass-1' }); ok('mlogin ok', ml.s === 200);
   const DT = ml.j.token;
   const me = await call('me', 'GET', null, DT); const blob = JSON.stringify(me.j);
@@ -107,12 +103,14 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   ok('status lookup no longer exists', (await call('status', 'POST', { email: 'ali@x.co', phone: '03001234567' })).s === 404);
   ok('status page is gone', (await page('/status')).s === 404);
   const home2 = await page('/committees'); ok('committees page escapes content', !home2.t.includes('<script>alert(1)'));
-  // password reset by admin logs the delegate out and needs a new code
-  const m2 = afterSave.members.map(m => m.id === 'T-d1' ? { ...m, resetPw: true, code: '777777' } : m);
+  // removing access logs the delegate out; the admin can then set a new password
+  const m2 = afterSave.members.map(m => m.id === 'T-d1' ? { ...m, resetPw: true } : m);
   await call('state', 'PUT', { state: { members: m2 }, known: [] }, AT);
   ok('reset logs the old token out', (await call('me', 'GET', null, DT)).s === 401);
   ok('reset: old password no longer works', (await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'delegate-pass-1' })).s === 401);
-  ok('reset: new code activates', (await call('activate', 'POST', { email: 'd1@uokmun.test', code: '777777', password: 'brand-new-pass-1' })).s === 200);
+  ok('reset: cannot sign in without a password', (await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'brand-new-pass-1' })).s === 401);
+  await call('state', 'PUT', { state: { members: afterSave.members.map(m => m.id === 'T-d1' ? { ...m, setPw: 'brand-new-pass-1' } : m) }, known: [] }, AT);
+  ok('admin sets a new password and the member signs in', (await call('mlogin', 'POST', { email: 'd1@uokmun.test', password: 'brand-new-pass-1' })).s === 200);
 
   /* ---------- pulse + password change ---------- */
   const pulse = await call('pulse', 'GET', null, AT); ok('pulse works for admin', pulse.s === 200 && typeof pulse.j.n === 'number');

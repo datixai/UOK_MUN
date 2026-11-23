@@ -22,8 +22,7 @@ export default function Portal() {
   async function submit(ev) {
     ev.preventDefault(); setBusy(true); setErr('');
     const f = ev.target, body = { email: f.em.value.trim().toLowerCase(), password: f.p.value };
-    if (mode === 'activate') body.code = f.code.value.trim();
-    try { const r = await api(mode === 'activate' ? 'activate' : 'mlogin', 'POST', body); await load(r.token); }
+    try { const r = await api('mlogin', 'POST', body); await load(r.token); }
     catch (e) { setErr(e.message); }
     setBusy(false);
   }
@@ -33,19 +32,14 @@ export default function Portal() {
     <>
       <h1 className="ph">Delegate portal</h1>
       <div className="card" style={{ maxWidth: 460, margin: 'auto' }}>
-        <div className="tabs" style={{ marginBottom: 6 }}>
-          <a href="#" className={mode === 'login' ? 'on' : ''} onClick={e => { e.preventDefault(); setMode('login'); setErr(''); }}>Sign in</a>
-          <a href="#" className={mode === 'activate' ? 'on' : ''} onClick={e => { e.preventDefault(); setMode('activate'); setErr(''); }}>First time? Activate</a>
-        </div>
-        <p className="mini">{mode === 'activate' ? 'Use the email the organisers registered and the access code they sent you on WhatsApp, then choose your own password (8 or more characters).' : 'Sign in with the email the organisers registered for you.'}</p>
+        <p className="mini">Sign in with the email and password the organisers gave you.</p>
         <form onSubmit={submit}>
           <label>Email</label><input type="email" name="em" required autoComplete="username" />
-          {mode === 'activate' && <><label>Access code</label><input name="code" required inputMode="numeric" /></>}
-          <label>{mode === 'activate' ? 'Choose a password' : 'Password'}</label><input type="password" name="p" required minLength={mode === 'activate' ? 8 : 1} autoComplete={mode === 'activate' ? 'new-password' : 'current-password'} /><br /><br />
-          <button className="btn big" style={{ width: '100%' }} disabled={busy}>{mode === 'activate' ? 'Activate my account' : 'Sign in'}</button>
+          <label>Password</label><input type="password" name="p" required autoComplete="current-password" /><br /><br />
+          <button className="btn big" style={{ width: '100%' }} disabled={busy}>Sign in</button>
         </form>
         {err && <div className="msg">{err}</div>}
-        <p className="mini" style={{ marginTop: 12 }}>Only people added by the organisers can sign in. If you are registered but have no code, contact the registration team on WhatsApp.</p>
+        <p className="mini" style={{ marginTop: 12 }}>Only people added by the organisers can sign in. If you are registered but cannot sign in, contact the registration team on WhatsApp.</p>
       </div>
     </>
   );

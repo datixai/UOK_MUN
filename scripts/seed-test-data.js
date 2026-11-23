@@ -36,7 +36,7 @@ const people = JSON.parse(fs.readFileSync(path.join(__dirname, 'people.json'), '
       id: 'T-' + p.slug, name: p.name, email: p.slug.replace('-', '.') + '@uokmun.test', phone: '', role: p.role, committee: p.committee,
       country: p.country, persona: p.persona, photo: photos[p.slug], source: 'Other',
       details: 'TEST ACCOUNT. Please read the background guide before the first session and prepare an opening speech of 60 seconds.',
-      code: '', pw: makePw(PASSWORD)
+      pw: makePw(PASSWORD)
     })));
   });
   console.log('Done. Admin:', ADMIN_EMAIL, '| members:', people.length, '| password for all: ' + PASSWORD);
