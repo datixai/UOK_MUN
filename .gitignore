@@ -10,3 +10,6 @@ firebase-service-account.json
 firebase-service-account*.json
 scripts/avatars/
 .env.vercel
+marketing/reel/node_modules/
+marketing/reel/work/
+marketing/reel/*.mp4

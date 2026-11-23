@@ -16,11 +16,11 @@ export const viewport = { themeColor: '#0F1E45' };
 
 export default async function RootLayout({ children }) {
   const { site: z } = await getPublic();
-  const items = [['/', 'Home'], z.showCommittees && ['/committees', 'Committees'], z.showSchedule && ['/schedule', 'Schedule']].filter(Boolean);
+  const items = [['/', 'Home'], z.showCommittees && ['/committees', 'Committees'], z.showSchedule && ['/schedule', 'Schedule'], z.showDocuments && ['/documents', 'Documents']].filter(Boolean);
   return (
     <html lang="en">
       <body>
-        <div className="topbar noprint"><b>Official platform</b> &nbsp;|&nbsp; University of Kotli, Azad Jammu and Kashmir &nbsp;|&nbsp; Department of International Relations</div>
+        <div className="topbar noprint"><b>Official platform</b> <span className="tb-x">&nbsp;|&nbsp; University of Kotli, Azad Jammu and Kashmir &nbsp;|&nbsp; Department of International Relations</span></div>
         <header><div className="bar">
           <Link className="brand" href="/"><img src="/logo.png" alt="UOK MUN logo" />UOK <b>MUN</b></Link>
           <Nav items={items} />

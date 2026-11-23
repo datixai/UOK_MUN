@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { DEF, clogo, waLink } from '../../lib/defaults';
 
 const TABS = [['dash', 'Dashboard'], ['regs', 'Registrations'], ['members', 'Members'], ['roll', 'Roll call'], ['floor', 'Floor'], ['score', 'Scores'], ['content', 'Content'], ['data', 'Data']];
-const KEYS = ['site', 'info', 'committees', 'schedule', 'news', 'regs', 'members', 'attendance', 'scores', 'sessions'];
+const KEYS = ['site', 'info', 'committees', 'schedule', 'news', 'docs', 'regs', 'members', 'attendance', 'scores', 'sessions'];
 const CR = [['paper', 'Position paper'], ['speech', 'Speeches'], ['dip', 'Diplomacy'], ['lobby', 'Lobbying'], ['res', 'Resolution work']];
-const AWARDS = ['Best Delegate', 'High Commendation', 'Special Mention', 'Best Position Paper', 'Participation'];
-const TOGGLES = [['showCountdown', 'Countdown on home (needs an event date)'], ['showStats', 'Statistics on home'], ['showVenue', 'Venue, date and fee card on home'], ['showNews', 'Announcements on home'], ['showHow', 'How it works section on home'], ['showCommittees', 'Committees page'], ['showAgendas', 'Agendas inside committee cards'], ['showSeats', 'Seat numbers (only committees with seats above 0)'], ['showSchedule', 'Schedule page'], ['showContact', 'Help and contact section on home'], ['regOpen', 'Registration open']];
+const AWARDS = ['Best Delegate', 'Outstanding Diplomacy', 'Special Mention'];
+const TOGGLES = [['showCountdown', 'Countdown on home (needs an event date)'], ['showStats', 'Statistics on home'], ['showVenue', 'Venue, date and fee card on home'], ['showNews', 'Announcements on home'], ['showHow', 'How it works section on home'], ['showCommittees', 'Committees page'], ['showAgendas', 'Agendas inside committee cards'], ['showSeats', 'Seat numbers (only committees with seats above 0)'], ['showSchedule', 'Schedule page'], ['showDocuments', 'Documents page'], ['showAwards', 'Awards section on home'], ['showContact', 'Help and contact section on home'], ['regOpen', 'Registration open']];
 
 async function api(p, method, body, token) {
   const r = await fetch('/api/' + p, { method: method || (body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -14,7 +14,7 @@ async function api(p, method, body, token) {
   if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status: r.status });
   return j;
 }
-const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, regs: [], members: [], ...d, site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) } });
+const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, docs: structuredClone(DEF.docs), regs: [], members: [], ...d, site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) } });
 const cname = (S, id) => (S.committees.find(c => c.id === id) || {}).name || '';
 const tagc = s => (s === 'approved' ? 'ok' : s === 'rejected' ? 'bad' : 'warn');
 
@@ -314,6 +314,10 @@ function Content({ S, upd, say, tokenOf }) {
         {S.schedule.map((s, i) => <tr key={i}>{[['day', 90], ['time', 80], ['title', 0], ['desc', 0], ['place', 130]].map(([k, w]) => <td key={k}><input value={s[k] || ''} style={w ? { width: w } : null} onChange={e => setS(i, k, e.target.value)} /></td>)}<td><button className="btn sm bad" onClick={() => upd(n => { n.schedule.splice(i, 1); })}>Delete</button></td></tr>)}
       </tbody></table></div><br />
       <button className="btn alt" onClick={() => upd(n => { n.schedule.push({ day: 'Day 1', time: '09:00', title: 'New item' }); })}>Add schedule line</button>
+      <h3 style={{ marginTop: 20 }}>Documents (shown on the Documents page)</h3>
+      <div className="card"><p className="mini">Add a title and a link (https) to a PDF or a Google Drive file, for example the background guide or rules of procedure.</p>
+        {(S.docs || []).map((d, i) => <div className="row" key={i}>{[['title', 'Title'], ['kind', 'Type (Guide, Rules...)'], ['url', 'Link (https://...)'], ['desc', 'Short note']].map(([k, l]) => <div key={k}><label>{l}</label><input value={d[k] || ''} onChange={e => upd(n => { n.docs[i][k] = e.target.value; })} /></div>)}<div style={{ alignSelf: 'end' }}><button className="btn sm bad" onClick={() => upd(n => { n.docs.splice(i, 1); })}>Remove</button></div></div>)}
+        <br /><button className="btn alt" onClick={() => upd(n => { n.docs = [...(n.docs || []), { title: 'New document', kind: '', url: '', desc: '' }]; })}>Add document</button></div>
       <h3 style={{ marginTop: 20 }}>Announcements</h3>
       <div className="card"><div className="row"><input placeholder="Title" value={nt} onChange={e => setNt(e.target.value)} /><input placeholder="Message" value={nx} onChange={e => setNx(e.target.value)} /><button className="btn" onClick={() => { if (nt) { upd(n => { n.news.push({ title: nt, text: nx, date: new Date().toDateString() }); }); setNt(''); setNx(''); } }}>Post</button></div>
         {S.news.map((n, i) => <p key={i}>{n.title} <button className="btn sm bad" onClick={() => upd(x => { x.news.splice(i, 1); })}>x</button></p>)}</div>

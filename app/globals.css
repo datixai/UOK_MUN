@@ -159,3 +159,13 @@ header{backdrop-filter:none}
 @media(max-width:600px){.pm-n{display:none}.pm-b{padding:3px}}
 
 header{background:#0A1430}
+
+/* compact header on phones: brand and login on one row, menu scrolls underneath */
+@media(max-width:700px){
+ .tb-x{display:none}
+ .bar{display:grid;grid-template-columns:1fr auto;grid-template-areas:"brand pm" "nav nav";gap:4px 8px;padding:6px 12px}
+ .brand{grid-area:brand;font-size:18px}.brand img{height:34px}
+ .pm{grid-area:pm;margin:0}.pm-login{padding:6px 12px;font-size:13px}
+ nav{grid-area:nav;margin:0;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding-bottom:2px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+ nav a{padding:6px 10px;font-size:13.5px;white-space:nowrap}
+}
