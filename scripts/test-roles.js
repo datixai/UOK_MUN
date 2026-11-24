@@ -24,7 +24,7 @@ const until = async (fn, n = 20) => { for (let i = 0; i < n; i++) { if (await fn
 
   const add = [
     m('RD1', 'Delegate', { committee: 'unsc', country: 'France' }), m('RD2', 'Delegate', { committee: 'oic', country: 'Turkey' }), m('RD3', 'Delegate', { committee: 'pna' }),
-    m('RC1', 'Chair', { committee: 'unsc', committees: ['unsc', 'oic'] }), m('RC2', 'Vice Chair', { committee: 'pna' }),
+    m('RC1', 'Chair', { committee: 'unsc', committees: ['unsc', 'oic'] }), m('RC2', 'Vice Chair', { committee: 'pna' }), m('RC3', 'Secretary', { committees: ['oic'] }),
     m('RO1', 'Observer', { committees: ['unsc'] }), m('RO2', 'Observer', { committees: [] })
   ];
   const ir = { name: 'Department of International Relations', uni: 'University of Kotli', tagline: 'Roles tag', about: 'About roles test', vision: '', email: '', phone: '', address: '', programmes: [], events: [{ title: 'Roles Event', date: '', text: 'x', link: '/uokmun', image: '', live: true }, { title: 'Bad link', link: 'javascript:alert(1)' }], news: [],
@@ -35,6 +35,7 @@ const until = async (fn, n = 20) => { for (let i = 0; i < n; i++) { if (await fn
   const saved = (await call('state', 'GET', null, AT)).j;
   ok('reserved page addresses are refused', saved.ir.pages.length === 1 && saved.ir.pages[0].slug === 'faculty', saved.ir.pages);
   ok('unsafe event link is cleared', saved.ir.events[1].link === '', saved.ir.events[1]);
+  ok('old roles become ADC', saved.members.find(x => x.id === 'RC2').role === 'ADC' && saved.members.find(x => x.id === 'RC3').role === 'ADC');
   ok('chair keeps several committees', JSON.stringify(saved.members.find(x => x.id === 'RC1').committees) === '["unsc","oic"]');
 
   const login = async id => (await call('mlogin', 'POST', { email: id.toLowerCase() + '@roles.test', password: PW })).j.token;

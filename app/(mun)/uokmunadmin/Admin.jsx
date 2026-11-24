@@ -14,7 +14,7 @@ async function api(p, method, body, token) {
   if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status: r.status });
   return j;
 }
-const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, docs: structuredClone(DEF.docs), regs: [], members: [], ...d, site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) }, ir: { ...structuredClone(DEF.ir), ...(d.ir || {}) } });
+const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, docs: structuredClone(DEF.docs), regs: [], members: [], ...d, members: (d.members || []).map(m => (['Vice Chair', 'Rapporteur', 'Secretary'].includes(m.role) ? { ...m, role: 'ADC' } : m)), site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) }, ir: { ...structuredClone(DEF.ir), ...(d.ir || {}) } });
 const cname = (S, id) => (S.committees.find(c => c.id === id) || {}).name || '';
 const tagc = s => (s === 'approved' ? 'ok' : s === 'rejected' ? 'bad' : 'warn');
 
@@ -174,7 +174,7 @@ function Roll({ S, upd }) {
   );
 }
 
-const ROLES = ['Delegate', 'Chair', 'Vice Chair', 'Rapporteur', 'Secretary', 'Observer'];
+const ROLES = ['Delegate', 'Chair', 'ADC', 'Observer'];
 const scopeOf = m => m.role === 'Delegate' ? (m.committee ? [m.committee] : []) : [...new Set([m.committee, ...(m.committees || [])].filter(Boolean))]; // chairs and observers can cover several committees
 const SOURCES = ['Online registration', 'WhatsApp', 'Offline', 'Other'];
 const genPw = () => { const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const a = new Uint32Array(10); crypto.getRandomValues(a); return [...a].map(x => c[x % c.length]).join(''); };

@@ -12,7 +12,7 @@ Website of the Department of International Relations, University of Kotli (front
 
 ## Key decisions
 0. The department site owns `/`; UOK MUN lives under `/uokmun` (route groups `app/(ir)` and `app/(mun)`). Old links (`/committees`, `/delegate` and so on) redirect to `/uokmun/...` in `next.config.js`. Department content is state key `ir`, edited in Admin, Department site tab. Extra page addresses must not use reserved names (`RESERVED` in `lib/core.js`).
-0b. Roles: Delegate (one committee, `committee`), Chair, Vice Chair, Rapporteur, Secretary (several committees, `committees` array plus `committee` = first), Observer (view only, `committees`). `scopeOf()` in core.js and Admin.jsx decides who sees what. Observers are never listed as chairs.
+0b. Roles: Delegate (one committee, `committee`), Chair, ADC (several committees; old Vice Chair, Rapporteur and Secretary entries are read as ADC, `committees` array plus `committee` = first), Observer (view only, `committees`). `scopeOf()` in core.js and Admin.jsx decides who sees what. Observers are never listed as chairs.
 1. No public status lookup and no public chair names: chairs and delegates are visible only to the admin and to members of the same committee.
 2. Admin login is email plus password; the owner email is fixed by `ADMIN_EMAIL`. Delegates are created by the admin, who sets each person's password in the Members tab (stored only as a hash); they sign in with email and password. There is no access code.
 3. Public pages are pre-built and cached; saving in admin refreshes them at once (`revalidatePath`).
