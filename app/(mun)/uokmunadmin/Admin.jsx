@@ -126,7 +126,7 @@ function Regs({ S, upd, say }) {
   const set = (id, fn) => upd(n => fn(n.regs.find(r => r.id === id)));
   const toMember = r => {
     if (S.members.some(m => (m.email || '').toLowerCase() === r.email.toLowerCase())) { say('Already in Members'); return; }
-    upd(n => { n.members.push({ id: 'M' + Date.now(), name: r.name, email: r.email, phone: r.phone, role: 'Delegate', committee: r.p1 || '', country: '', persona: '', details: '', photo: '', source: 'Online registration' }); n.regs.find(x => x.id === r.id).status = 'approved'; });
+    upd(n => { n.members.push({ id: 'M' + Date.now(), name: r.name, email: r.email, phone: r.phone, role: 'Delegate', committee: r.p1 || '', country: '', persona: '', details: '', photo: r.photo || '', source: 'Online registration' }); const g = n.regs.find(x => x.id === r.id); g.status = 'approved'; delete g.photo; }); // the picture moves to the member (saves database space)
     say('Added to Members. Open the Members tab to set committee, country and photo.');
   };
   return (
@@ -134,7 +134,7 @@ function Regs({ S, upd, say }) {
       <div className="row"><input placeholder="Search name, email, phone" value={q} onChange={e => setQ(e.target.value)} />
         <select value={f} onChange={e => setF(e.target.value)}><option value="">All statuses</option>{['pending', 'approved', 'rejected'].map(s => <option key={s}>{s}</option>)}</select></div><br />
       <div className="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Status</th><th>Paid</th><th></th></tr></thead><tbody>
-        {L.map(r => <tr key={r.id}><td>{r.name}<div className="mini">{r.uni}</div></td><td>{r.email}</td><td>{r.phone}</td><td>{(r.created || '').slice(0, 10)}</td>
+        {L.map(r => <tr key={r.id}><td>{r.photo && <img className="av" src={r.photo} alt="" style={{ marginRight: 6, verticalAlign: "middle" }} />}{r.name}<div className="mini">{r.uni}</div></td><td>{r.email}</td><td>{r.phone}</td><td>{(r.created || '').slice(0, 10)}</td>
           <td><span className={'tag ' + tagc(r.status)}>{r.status}</span></td>
           <td><input type="checkbox" style={{ width: 'auto' }} checked={!!r.paid} onChange={e => set(r.id, x => { x.paid = e.target.checked; })} /></td>
           <td style={{ whiteSpace: 'nowrap' }}><button className="btn sm ok" onClick={() => set(r.id, x => { x.status = 'approved'; })}>Approve</button> <button className="btn sm" onClick={() => toMember(r)}>Add as delegate</button> <button className="btn sm bad" onClick={() => set(r.id, x => { x.status = 'rejected'; })}>Reject</button> <button className="btn sm alt" onClick={() => { if (confirm('Delete ' + r.name + '?')) upd(n => { n.regs = n.regs.filter(x => x.id !== r.id); }); }}>Delete</button></td></tr>)}
@@ -361,7 +361,8 @@ function Dept({ S, upd, say, tokenOf }) {
       <p className="mini">This is the front page of the website (<a href="/" target="_blank" rel="noopener noreferrer">open it</a>). UOK MUN is one of the department events. Changes save automatically and go live at once.</p>
       <h3>Department details</h3>
       <div className="card"><div className="row">{F('name', 'Department name')}{F('uni', 'University line')}{F('tagline', 'Tagline')}{F('email', 'Public email')}{F('phone', 'Public phone')}{F('address', 'Address')}</div>
-        {F('about', 'About the department', true)}{F('vision', 'Vision (optional)', true)}</div>
+        {F('about', 'About the department', true)}{F('vision', 'Vision (optional)', true)}
+        <h4 style={{ margin: '14px 0 0' }}>Section headings on the front page</h4><div className="row">{F('tAbout', 'About the department')}{F('tVision', 'Our vision')}{F('tProg', 'Programmes')}{F('tEvents', 'Events')}{F('tNews', 'News and notices')}{F('tContact', 'Contact')}</div></div>
       <h3 style={{ marginTop: 20 }}>Programmes</h3>
       {List({ k: 'programmes', fields: [['name', 'Programme name'], ['text', 'Short description', 'area']], blank: { name: 'New programme', text: '' }, label: "Add programme" })}
       <h3 style={{ marginTop: 20 }}>Events</h3>

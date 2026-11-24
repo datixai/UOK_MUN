@@ -67,6 +67,14 @@ const until = async (fn, n = 20) => { for (let i = 0; i < n; i++) { if (await fn
   ok('observer cannot save', (await call('state', 'PUT', { state: { members: [] } }, O1)).s === 401);
   ok('whoami lists chair committees', (await call('whoami', 'GET', null, C1)).j.committee === 'UNSC, OIC');
 
+  // registration picture
+  const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  ok('register with picture', (await call('register', 'POST', { name: 'Pic Person', email: 'pic@roles.test', phone: '03001234567', photo: px })).s === 200);
+  ok('register refuses a non-picture', (await call('register', 'POST', { name: 'Bad Pic', email: 'badpic@roles.test', phone: '03001234567', photo: 'https://evil.example/x.png' })).s === 400);
+  const regs = (await call('state', 'GET', null, AT)).j.regs;
+  ok('admin sees the registration picture', (regs.find(r => r.email === 'pic@roles.test') || {}).photo === px);
+  ok('upload without Storage falls back (501)', (await call('upload', 'POST', { name: 'x.png', dataUrl: px }, AT)).s === 501);
+
   // pages
   ok('department home shows', await until(async () => { const h = await html('/'); return h.s === 200 && h.t.includes('Roles tag') && h.t.includes('Roles Event'); }));
   const f = await html('/faculty');
