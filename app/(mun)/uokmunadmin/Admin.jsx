@@ -332,7 +332,7 @@ function Content({ S, upd, say, tokenOf }) {
       <button className="btn alt" onClick={() => upd(n => { n.committees.push({ id: 'c' + Date.now(), name: 'New', full: 'New committee', seats: 0, chairs: '', countries: '', a1: '', a2: '' }); })}>Add committee</button>
       <h3 style={{ marginTop: 20 }}>Schedule (shown as a timeline)</h3>
       <div className="tw"><table><thead><tr><th>Day</th><th>Time</th><th>Title</th><th>Description (optional)</th><th>Venue (optional)</th><th></th></tr></thead><tbody>
-        {S.schedule.map((s, i) => <tr key={i}>{[['day', 90], ['time', 80], ['title', 0], ['desc', 0], ['place', 130]].map(([k, w]) => <td key={k}><input value={s[k] || ''} style={w ? { width: w } : null} onChange={e => setS(i, k, e.target.value)} /></td>)}<td><button className="btn sm bad" onClick={() => upd(n => { n.schedule.splice(i, 1); })}>Delete</button></td></tr>)}
+        {S.schedule.map((s, i) => <tr key={i}>{[['day', 90], ['time', 80], ['title', 0], ['desc', 0], ['place', 130]].map(([k, w]) => <td key={k}><input value={s[k] || ''} placeholder={k === 'time' ? '9:00 AM' : undefined} style={w ? { width: w } : null} onChange={e => setS(i, k, e.target.value)} /></td>)}<td><button className="btn sm bad" onClick={() => upd(n => { n.schedule.splice(i, 1); })}>Delete</button></td></tr>)}
       </tbody></table></div><br />
       <button className="btn alt" onClick={() => upd(n => { n.schedule.push({ day: 'Day 1', time: '09:00', title: 'New item' }); })}>Add schedule line</button>
       <h3 style={{ marginTop: 20 }}>Press Release page (documents and announcements with links)</h3>

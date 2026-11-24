@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { clogo, waLink } from '@/lib/defaults';
+import { clogo, waLink, byTime, timeLabel } from '@/lib/defaults';
 
 async function api(p, method, body, token) {
   const r = await fetch('/api/' + p, { method: method || (body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -75,7 +75,7 @@ export default function Portal() {
           {delegates.length === 0 && <p>No delegates have been added yet.</p>}</div>
       </div>)}
 
-      {days.length > 0 && <><h2 className="sec">Schedule</h2>{days.map(d => <div key={d}><div className="dayh"><span>{d}</span></div><div className="tlw">{schedule.filter(s => s.day === d).sort((a, b) => a.time.localeCompare(b.time)).map((s, i) => <div className="ti" key={i}><div className="tc"><span className="tt">{s.time}</span><h3>{s.title}</h3>{s.desc && <p>{s.desc}</p>}{s.place && <div className="mini">Venue: {s.place}</div>}</div></div>)}</div></div>)}</>}
+      {days.length > 0 && <><h2 className="sec">Schedule</h2>{days.map(d => <div key={d}><div className="dayh"><span>{d}</span></div><div className="tlw">{byTime(schedule.filter(s => s.day === d)).map((s, i) => <div className="ti" key={i}><div className="tc"><span className="tt">{timeLabel(s.time)}</span><h3>{s.title}</h3>{s.desc && <p>{s.desc}</p>}{s.place && <div className="mini">Venue: {s.place}</div>}</div></div>)}</div></div>)}</>}
 
       {(site.contacts || []).length > 0 && <><h2 className="sec">Need help?</h2><div className="grid">{site.contacts.filter(x => x.phone).map(x => <a key={x.phone} className="card ct" href={waLink(x.phone, 'Assalam o Alaikum, I am a member at UOK MUN (' + me.role + ').')} target="_blank" rel="noopener noreferrer"><h3>{x.name}</h3><div className="mini">{x.role}</div><p>WhatsApp: <b>{x.phone}</b></p></a>)}</div></>}
     </>

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getPublic } from '@/lib/data';
+import { byTime, timeLabel } from '@/lib/defaults';
 
 export const revalidate = 60;
 export const metadata = { title: 'Schedule | UOK MUN' };
@@ -15,8 +16,8 @@ export default async function Schedule() {
         <div key={d}>
           <div className="dayh"><span>{d}</span></div>
           <div className="tlw">
-            {schedule.filter(s => s.day === d).sort((a, b) => a.time.localeCompare(b.time)).map((s, i) => (
-              <div className="ti rv" key={i}><div className="tc"><span className="tt">{s.time}</span><h3>{s.title}</h3>{s.desc && <p>{s.desc}</p>}{s.place && <div className="mini">Venue: {s.place}</div>}</div></div>
+            {byTime(schedule.filter(s => s.day === d)).map((s, i) => (
+              <div className="ti rv" key={i}><div className="tc"><span className="tt">{timeLabel(s.time)}</span><h3>{s.title}</h3>{s.desc && <p>{s.desc}</p>}{s.place && <div className="mini">Venue: {s.place}</div>}</div></div>
             ))}
           </div>
         </div>
