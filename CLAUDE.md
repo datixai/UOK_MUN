@@ -55,6 +55,7 @@ _legacy/        old single-file version (git-ignored)
 - Git: commit as the local identity, no Claude attribution, ask before every push.
 
 ## Progress log
+- 2026-11-24: replaced the Delegate Guide with the team's edited Word file (`docs/UOKMUN-Delegate-Guide.docx`, exported with Word to `public/docs/UOKMUN-Delegate-Guide.pdf`, same link on the Press Release page). Do not run `scripts/make-delegate-guide.py` again: it would overwrite the edited guide.
 - 2026-11-24 (later): department cards centred, front page section headings editable in Admin; original footer restored everywhere (`components/Footer.jsx`, do not redesign it); optional profile picture on the registration form (resized in the browser, moves to the member on Add as delegate); picture uploads fall back to inline storage when Firebase Storage fails, which was why admin photos did not appear on the live site.
 - 2026-11-24 (office PC): department of IR front page at `/` with events, news, programmes and admin-made pages; UOK MUN moved to `/uokmun` with redirects from old links; chairs can supervise several committees; new Observer role (view only); portal renamed Member portal; new test file `scripts/test-roles.js` (35 checks) and test-all (99 checks) pass on a throw-away server.
 - 2026-11-23: removed the access-code activation; the admin sets each member's password (Generate, Set password, Remove access, Send login on WhatsApp); guide published as PDF (editable Word source in `docs/`).

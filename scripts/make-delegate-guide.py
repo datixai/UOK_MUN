@@ -1,3 +1,4 @@
+# NOTE (2026-11-24): the guide is now edited by hand in Word. Running this script overwrites docs/UOKMUN-Delegate-Guide.docx.
 # Builds the editable Word document docs/UOKMUN-Delegate-Guide.docx. Export it to PDF (Word: File, Save as PDF) as public/docs/UOKMUN-Delegate-Guide.pdf, which is the file shown on the Documents page.
 # Run: python scripts/make-delegate-guide.py     Requires: python-docx
 # The content below is plain Python; edit the text here or open the .docx in Word and edit it there (dates and times are marked "To be announced").
