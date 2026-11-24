@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
-import { getPublic } from '../../lib/data';
-import { clogo } from '../../lib/defaults';
+import { getPublic } from '@/lib/data';
+import { clogo } from '@/lib/defaults';
 
 export const revalidate = 60;
 export const metadata = { title: 'Committees | UOK MUN' };
 
 export default async function Committees() {
   const { site: z, committees, counts } = await getPublic();
-  if (!z.showCommittees) redirect('/');
+  if (!z.showCommittees) redirect('/uokmun');
   return (
     <>
       <h1 className="ph">Committees</h1>

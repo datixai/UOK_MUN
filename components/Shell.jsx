@@ -56,7 +56,7 @@ const WA_ICON = <svg viewBox="0 0 24 24" width="30" height="30" fill="#fff" aria
 // Floating WhatsApp button on the right side with the contact people.
 export function WhatsApp({ contacts }) {
   const [open, setOpen] = useState(false), path = usePathname(), auth = useAuth();
-  if (path.startsWith('/delegate') || path.startsWith('/uokmunadmin') || auth.member || auth.admin) return null; // only for visitors on the public site
+  if (path.startsWith('/uokmun/delegate') || path.startsWith('/uokmunadmin') || auth.member || auth.admin) return null; // only for visitors on the public site
   const list = (contacts || []).filter(c => c.phone);
   if (!list.length) return null;
   const msg = 'Assalam o Alaikum, I have a question about UOK MUN.';
@@ -91,8 +91,8 @@ export function ProfileMenu() {
     window.addEventListener('uokmun-auth', check);
     return () => { alive = false; window.removeEventListener('uokmun-auth', check); };
   }, []);
-  const out = () => { try { sessionStorage.removeItem('uokmun_m'); sessionStorage.removeItem('uokmun_t'); } catch (e) {} setMe(null); setAdmin(false); setOpen(false); window.dispatchEvent(new Event('uokmun-auth')); if (location.pathname.startsWith('/delegate') || location.pathname.startsWith('/uokmunadmin')) location.href = '/'; };
-  if (!me && !admin) return <Link2 className="pm-login" href="/delegate">Delegate login</Link2>;
+  const out = () => { try { sessionStorage.removeItem('uokmun_m'); sessionStorage.removeItem('uokmun_t'); } catch (e) {} setMe(null); setAdmin(false); setOpen(false); window.dispatchEvent(new Event('uokmun-auth')); if (location.pathname.startsWith('/uokmun/delegate') || location.pathname.startsWith('/uokmunadmin')) location.href = '/uokmun'; };
+  if (!me && !admin) return <Link2 className="pm-login" href="/uokmun/delegate">Member login</Link2>;
   const name = me ? me.name : 'Admin';
   return (
     <div className="pm">
@@ -102,7 +102,7 @@ export function ProfileMenu() {
       </button>
       {open && <div className="pm-menu" onClick={() => setOpen(false)}>
         <div className="pm-h"><b>{name}</b><span>{me ? [me.role, me.committee].filter(Boolean).join(' | ') : 'Administrator'}</span>{me && me.country && <span>{me.country}</span>}</div>
-        {me && <Link2 href="/delegate">My committee</Link2>}
+        {me && <Link2 href="/uokmun/delegate">My portal</Link2>}
         {admin && <Link2 href="/uokmunadmin">Admin panel</Link2>}
         <button onClick={out}>Log out</button>
       </div>}

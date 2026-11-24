@@ -15,7 +15,10 @@ const csp = [
 module.exports = {
   experimental: { serverComponentsExternalPackages: ['firebase-admin'] },
   poweredByHeader: false,
-  async redirects() { return [{ source: '/documents', destination: '/press-release', permanent: true }]; },
+  async redirects() { // the conference moved under /uokmun when the department site took the front page; old links keep working
+    return [{ source: '/documents', destination: '/uokmun/press-release', permanent: true }, { source: '/uokmun/documents', destination: '/uokmun/press-release', permanent: true },
+      ...['committees', 'schedule', 'register', 'press-release', 'delegate'].map(p => ({ source: '/' + p, destination: '/uokmun/' + p, permanent: true }))];
+  },
   async headers() {
     return [{ source: '/:path*', headers: [
       { key: 'Content-Security-Policy', value: csp },

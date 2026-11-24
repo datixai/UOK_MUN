@@ -14,8 +14,8 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
 
 (async () => {
   /* ---------- pages ---------- */
-  for (const p of ['/', '/committees', '/schedule', '/register', '/delegate', '/uokmunadmin']) { const r = await page(p); ok('page ' + p + ' 200', r.s === 200, r.s); ok('page ' + p + ' has footer credit', r.t.includes('Datix AI')); }
-  const home = await page('/');
+  for (const p of ['/', '/uokmun', '/uokmun/committees', '/uokmun/schedule', '/uokmun/register', '/uokmun/delegate', '/uokmunadmin']) { const r = await page(p); ok('page ' + p + ' 200', r.s === 200, r.s); ok('page ' + p + ' has footer credit', r.t.includes('Datix AI')); }
+  const home = await page('/uokmun');
   ok('home has WhatsApp contacts', home.t.includes('0355 6650661') || home.t.includes('wa.me'));
   ok('home has no admin link', !/href="\/uokmunadmin"/.test(home.t));
   ok('security header CSP', (home.h.get('content-security-policy') || '').includes("frame-ancestors 'none'"));
@@ -102,7 +102,7 @@ const mk = (p, extra = {}) => ({ id: 'T-' + p, name: 'Person ' + p, email: p + '
   ok('public hides delegates', !JSON.stringify(pub).includes('Person d1'));
   ok('status lookup no longer exists', (await call('status', 'POST', { email: 'ali@x.co', phone: '03001234567' })).s === 404);
   ok('status page is gone', (await page('/status')).s === 404);
-  const home2 = await page('/committees'); ok('committees page escapes content', !home2.t.includes('<script>alert(1)'));
+  const home2 = await page('/uokmun/committees'); ok('committees page escapes content', !home2.t.includes('<script>alert(1)'));
   // removing access logs the delegate out; the admin can then set a new password
   const m2 = afterSave.members.map(m => m.id === 'T-d1' ? { ...m, resetPw: true } : m);
   await call('state', 'PUT', { state: { members: m2 }, known: [] }, AT);

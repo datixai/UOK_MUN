@@ -2,7 +2,8 @@
 
 Conference platform for UOK MUN, University of Kotli Model United Nations. Built with Next.js 14 (App Router) and Firebase. Developed by Datix AI.
 
-Public site: Home, Committees, Schedule, Register.
+Front page (`/`): Department of International Relations (about, programmes, events, news, extra pages made in Admin, Department site).
+UOK MUN (`/uokmun`): Home, Committees, Schedule, Register, Press Release, Member portal (delegates, chairs over one or more committees, observers with view only).
 Private admin (not linked anywhere): `/uokmunadmin`, signed in with the admin email and a password.
 Admin: dashboard, registrations, allocation, roll call, floor (timer, motions, voting), scores and certificates, content (everything visitors see, committee logos, schedule, announcements), data backup and CSV.
 

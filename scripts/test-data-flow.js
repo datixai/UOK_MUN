@@ -31,13 +31,13 @@ const avatar = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 
   r = await save(c => ({ site: { ...c.site, regOpen: false, closedMsg: 'Closed ' + tag } })); ok('switch registration off', r.s === 200, r);
 
   console.log('Public visitors see the changes (pages refresh at once after a save)');
-  ok('home shows announcement', await until(async () => (await html('/')).includes('News ' + tag)));
-  ok('schedule shows new item and venue', await until(async () => { const t = await html('/schedule'); return t.includes('Session ' + tag) && t.includes('Day 9'); }));
-  ok('committees page shows new committee', await until(async () => { const t = await html('/committees'); return t.includes('QA Committee ' + tag) && t.includes('Agenda ' + tag); }));
-  ok('committees page shows edited agenda', (await html('/committees')).includes('Edited agenda ' + tag));
-  ok('register page shows closed message', await until(async () => (await html('/register')).includes('Closed ' + tag)));
+  ok('home shows announcement', await until(async () => (await html('/uokmun')).includes('News ' + tag)));
+  ok('schedule shows new item and venue', await until(async () => { const t = await html('/uokmun/schedule'); return t.includes('Session ' + tag) && t.includes('Day 9'); }));
+  ok('committees page shows new committee', await until(async () => { const t = await html('/uokmun/committees'); return t.includes('QA Committee ' + tag) && t.includes('Agenda ' + tag); }));
+  ok('committees page shows edited agenda', (await html('/uokmun/committees')).includes('Edited agenda ' + tag));
+  ok('register page shows closed message', await until(async () => (await html('/uokmun/register')).includes('Closed ' + tag)));
   await save(c => ({ site: { ...c.site, regOpen: true } }));
-  ok('register page reopens', await until(async () => !(await html('/register')).includes('Closed ' + tag)));
+  ok('register page reopens', await until(async () => !(await html('/uokmun/register')).includes('Closed ' + tag)));
 
   console.log('Public user registers, admin sees it');
   const email = tag.toLowerCase() + '@uokmun.test';
@@ -71,7 +71,7 @@ const avatar = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 
   const qme2 = (await call('me', 'GET', null, QT)).j; ok('moved delegate now sees the new committee', qme2.committee.id === 'unsc' && qme2.delegates.every(d => d.id !== 'T-hassan-mehmood'));
   r = await save(c => ({ members: c.members.map(m => m.id === 'T-ayesha-khan' ? { ...m, name: 'Ayesha Khan ' + tag } : m) }));
   await w(2500);
-  ok('chair names are never shown on the public committees page', !(await html('/committees')).includes('Ayesha Khan'));
+  ok('chair names are never shown on the public committees page', !(await html('/uokmun/committees')).includes('Ayesha Khan'));
   me = (await call('me', 'GET', null, HT)).j; ok('chair rename shows to delegates of that committee only', me.chairs.some(c => c.name === 'Ayesha Khan ' + tag) || me.committee.id !== 'unsc');
 
   console.log('Delegates cannot change data');
@@ -89,7 +89,7 @@ const avatar = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(__dirname, 
   ok('registrations back to original', end.regs.length === snap.regs.length && !end.regs.some(x => x.email === email));
   ok('committees, schedule, news back to original', end.committees.length === snap.committees.length && end.schedule.length === snap.schedule.length && end.news.length === snap.news.length);
   ok('delegate password survived the whole test', (await call('mlogin', 'POST', { email: 'hassan.mehmood@uokmun.test', password: PASS })).s === 200);
-  ok('public site is clean again', await until(async () => { const t = await html('/'); const c = await html('/committees'); return !t.includes('News ' + tag) && !c.includes('QA Committee'); }));
+  ok('public site is clean again', await until(async () => { const t = await html('/uokmun'); const c = await html('/uokmun/committees'); return !t.includes('News ' + tag) && !c.includes('QA Committee'); }));
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

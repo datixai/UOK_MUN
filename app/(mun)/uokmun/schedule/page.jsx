@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
-import { getPublic } from '../../lib/data';
+import { getPublic } from '@/lib/data';
 
 export const revalidate = 60;
 export const metadata = { title: 'Schedule | UOK MUN' };
 
 export default async function Schedule() {
   const { site: z, schedule } = await getPublic();
-  if (!z.showSchedule) redirect('/');
+  if (!z.showSchedule) redirect('/uokmun');
   const days = [...new Set(schedule.map(s => s.day))];
   return (
     <>

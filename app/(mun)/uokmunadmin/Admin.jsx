@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { DEF, clogo, waLink } from '../../lib/defaults';
+import { DEF, clogo, waLink } from '@/lib/defaults';
 
-const TABS = [['dash', 'Dashboard'], ['regs', 'Registrations'], ['members', 'Members'], ['roll', 'Roll call'], ['floor', 'Floor'], ['score', 'Scores'], ['content', 'Content'], ['data', 'Data']];
-const KEYS = ['site', 'info', 'committees', 'schedule', 'news', 'docs', 'regs', 'members', 'attendance', 'scores', 'sessions'];
+const TABS = [['dash', 'Dashboard'], ['regs', 'Registrations'], ['members', 'Members'], ['roll', 'Roll call'], ['floor', 'Floor'], ['score', 'Scores'], ['content', 'Content'], ['dept', 'Department site'], ['data', 'Data']];
+const KEYS = ['site', 'info', 'ir', 'committees', 'schedule', 'news', 'docs', 'regs', 'members', 'attendance', 'scores', 'sessions'];
 const CR = [['paper', 'Position paper'], ['speech', 'Speeches'], ['dip', 'Diplomacy'], ['lobby', 'Lobbying'], ['res', 'Resolution work']];
 const AWARDS = ['Best Delegate', 'Outstanding Diplomacy', 'Special Mention'];
 const TOGGLES = [['showCountdown', 'Countdown on home (needs an event date)'], ['showStats', 'Statistics on home'], ['showVenue', 'Venue, date and fee card on home'], ['showNews', 'Announcements on home'], ['showHow', 'How it works section on home'], ['showCommittees', 'Committees page'], ['showAgendas', 'Agendas inside committee cards'], ['showSeats', 'Seat numbers (only committees with seats above 0)'], ['showSchedule', 'Schedule page'], ['showDocuments', 'Press Release page'], ['showAwards', 'Awards section on home'], ['showContact', 'Help and contact section on home'], ['regOpen', 'Registration open']];
@@ -14,7 +14,7 @@ async function api(p, method, body, token) {
   if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status: r.status });
   return j;
 }
-const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, docs: structuredClone(DEF.docs), regs: [], members: [], ...d, site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) } });
+const merge = d => ({ ...structuredClone(DEF), attendance: {}, scores: {}, sessions: {}, docs: structuredClone(DEF.docs), regs: [], members: [], ...d, site: { ...DEF.site, ...(d.site || {}) }, info: { ...DEF.info, ...(d.info || {}) }, ir: { ...structuredClone(DEF.ir), ...(d.ir || {}) } });
 const cname = (S, id) => (S.committees.find(c => c.id === id) || {}).name || '';
 const tagc = s => (s === 'approved' ? 'ok' : s === 'rejected' ? 'bad' : 'warn');
 
@@ -76,7 +76,7 @@ export default function Admin() {
         <span className="sync">{sync || 'Live server'}</span>
       </div>
       {tab === 'dash' && <Dash {...P} />}{tab === 'regs' && <Regs {...P} />}{tab === 'members' && <Members {...P} />}{tab === 'roll' && <Roll {...P} />}
-      {tab === 'floor' && <Floor {...P} />}{tab === 'score' && <Score {...P} />}{tab === 'content' && <Content {...P} />}{tab === 'data' && <Data {...P} />}
+      {tab === 'floor' && <Floor {...P} />}{tab === 'score' && <Score {...P} />}{tab === 'content' && <Content {...P} />}{tab === 'dept' && <Dept {...P} />}{tab === 'data' && <Data {...P} />}
       <div id="toast" className={toast ? 'show' : ''}>{toast}</div>
     </>
   );
@@ -162,14 +162,15 @@ function Roll({ S, upd }) {
   );
 }
 
-const ROLES = ['Delegate', 'Chair', 'Vice Chair', 'Rapporteur', 'Secretary'];
+const ROLES = ['Delegate', 'Chair', 'Vice Chair', 'Rapporteur', 'Secretary', 'Observer'];
+const scopeOf = m => m.role === 'Delegate' ? (m.committee ? [m.committee] : []) : [...new Set([m.committee, ...(m.committees || [])].filter(Boolean))]; // chairs and observers can cover several committees
 const SOURCES = ['Online registration', 'WhatsApp', 'Offline', 'Other'];
 const genPw = () => { const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const a = new Uint32Array(10); crypto.getRandomValues(a); return [...a].map(x => c[x % c.length]).join(''); };
 const Face = ({ m }) => m.photo ? <img className="av" src={m.photo} alt="" /> : <span className="av">{(m.name || '?').slice(0, 1)}</span>;
 
 function Members({ S, upd, say, tokenOf }) {
   const [cid, setCid] = useState(''), [q, setQ] = useState(''), [open, setOpen] = useState(null);
-  const L = S.members.filter(m => (!cid || m.committee === cid) && (!q || (m.name + m.email + m.country + m.persona).toLowerCase().includes(q.toLowerCase())));
+  const L = S.members.filter(m => (!cid || scopeOf(m).includes(cid)) && (!q || (m.name + m.email + m.country + m.persona).toLowerCase().includes(q.toLowerCase())));
   const set = (id, k, v) => upd(n => { n.members.find(m => m.id === id)[k] = v; });
   const add = () => { const id = 'M' + Date.now(); upd(n => { n.members.push({ id, name: '', email: '', phone: '', role: 'Delegate', committee: cid, country: '', persona: '', details: '', photo: '', source: 'WhatsApp' }); }); setOpen(id); };
   function photo(id, file) {
@@ -184,17 +185,17 @@ function Members({ S, upd, say, tokenOf }) {
     im.src = URL.createObjectURL(file);
   }
   const [pws, setPws] = useState({});
-  const invite = (m, pw) => waLink(m.phone, 'Assalam o Alaikum ' + m.name + '. You are registered for UOK MUN as ' + m.role + (m.committee ? ' in ' + cname(S, m.committee) : '') + '. Sign in at ' + location.origin + '/delegate with your email ' + m.email + ' and password ' + pw + '. Please keep it private.');
+  const invite = (m, pw) => waLink(m.phone, 'Assalam o Alaikum ' + m.name + '. You are registered for UOK MUN as ' + m.role + (scopeOf(m).length ? ' in ' + scopeOf(m).map(id => cname(S, id)).join(', ') : '') + '. Sign in at ' + location.origin + '/uokmun/delegate with your email ' + m.email + ' and password ' + pw + '. Please keep it private.');
   const dup = m => m.email && S.members.some(x => x.id !== m.id && (x.email || '').toLowerCase() === m.email.toLowerCase());
   return (
     <>
-      <p className="mini">Add everyone who takes part, however they registered (online, WhatsApp or offline). Each person signs in at <b>/delegate</b> with their email and sees only their own committee.</p>
-      <div className="row"><select value={cid} onChange={e => setCid(e.target.value)}><option value="">All committees ({S.members.length})</option>{S.committees.map(c => <option key={c.id} value={c.id}>{c.name} ({S.members.filter(m => m.committee === c.id).length})</option>)}</select>
+      <p className="mini">Add everyone who takes part, however they registered (online, WhatsApp or offline). Each person signs in at <b>/uokmun/delegate</b> with their email. Delegates see their own committee; chairs and observers see every committee you tick for them (observers can only view).</p>
+      <div className="row"><select value={cid} onChange={e => setCid(e.target.value)}><option value="">All committees ({S.members.length})</option>{S.committees.map(c => <option key={c.id} value={c.id}>{c.name} ({S.members.filter(m => scopeOf(m).includes(c.id)).length})</option>)}</select>
         <input placeholder="Search name, email, country" value={q} onChange={e => setQ(e.target.value)} /></div><br />
       <button className="btn" onClick={add}>Add member</button> <button className="btn alt" onClick={() => window.print()}>Print list</button><br /><br />
       {L.map(m => <div className="card" style={{ marginBottom: 10 }} key={m.id}>
         <div className="mem"><Face m={m} />
-          <div style={{ flex: 1 }}><b>{m.name || 'New member'}</b> <span className={'tag ' + (m.role === 'Delegate' ? '' : 'ok')}>{m.role}</span>{m.committee && <span className="tag">{cname(S, m.committee)}</span>}<span className={'tag ' + (m.hasAccount ? 'ok' : 'warn')}>{m.hasAccount ? 'can sign in' : 'no password yet'}</span>
+          <div style={{ flex: 1 }}><b>{m.name || 'New member'}</b> <span className={'tag ' + (m.role === 'Delegate' ? '' : 'ok')}>{m.role}</span>{scopeOf(m).map(id => <span className="tag" key={id}>{cname(S, id)}</span>)}<span className={'tag ' + (m.hasAccount ? 'ok' : 'warn')}>{m.hasAccount ? 'can sign in' : 'no password yet'}</span>
             <div className="mini">{[m.country, m.persona && 'as ' + m.persona, m.email].filter(Boolean).join(' | ')}</div></div>
           <div className="noprint"><button className="btn sm alt" onClick={() => setOpen(open === m.id ? null : m.id)}>{open === m.id ? 'Close' : 'Edit'}</button> <button className="btn sm bad" onClick={() => { if (confirm('Delete ' + (m.name || 'this member') + '?')) upd(n => { n.members = n.members.filter(x => x.id !== m.id); }); }}>Delete</button></div></div>
         {open === m.id && <div className="noprint">
@@ -203,7 +204,8 @@ function Members({ S, upd, say, tokenOf }) {
             <div><label>Email (used to sign in)</label><input type="email" value={m.email} onChange={e => set(m.id, 'email', e.target.value.trim())} />{dup(m) && <div className="mini" style={{ color: '#ffb0a8' }}>This email is already used by another member.</div>}</div>
             <div><label>Phone / WhatsApp</label><input value={m.phone} onChange={e => set(m.id, 'phone', e.target.value)} /></div>
             <div><label>Role</label><select value={m.role} onChange={e => set(m.id, 'role', e.target.value)}>{ROLES.map(r => <option key={r}>{r}</option>)}</select></div>
-            <div><label>Committee</label><select value={m.committee} onChange={e => set(m.id, 'committee', e.target.value)}><option value="">Not placed yet</option>{S.committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            {m.role === 'Delegate' ? <div><label>Committee</label><select value={m.committee} onChange={e => set(m.id, 'committee', e.target.value)}><option value="">Not placed yet</option>{S.committees.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              : <div><label>{m.role === 'Observer' ? 'Committees this observer can watch' : 'Committees this person supervises'}</label>{S.committees.map(c => <label key={c.id} style={{ fontWeight: 400, display: 'flex', gap: 8, alignItems: 'center' }}><input type="checkbox" style={{ width: 'auto' }} checked={scopeOf(m).includes(c.id)} onChange={e => upd(n => { const x = n.members.find(y => y.id === m.id), cur = scopeOf(x), nx = e.target.checked ? [...cur, c.id] : cur.filter(i => i !== c.id); x.committees = nx; x.committee = nx[0] || ''; })} /> {c.name}</label>)}</div>}
             <div><label>Country or party</label><input list={'cn' + m.id} value={m.country} onChange={e => set(m.id, 'country', e.target.value)} /><datalist id={'cn' + m.id}>{((S.committees.find(c => c.id === m.committee) || {}).countries || '').split('\n').filter(Boolean).map(x => <option key={x} value={x.trim()} />)}</datalist></div>
             <div><label>Personality (for example Imran Khan in PNA)</label><input value={m.persona} onChange={e => set(m.id, 'persona', e.target.value)} /></div>
             <div><label>How they registered</label><select value={m.source} onChange={e => set(m.id, 'source', e.target.value)}>{SOURCES.map(r => <option key={r}>{r}</option>)}</select></div>
@@ -328,6 +330,48 @@ function Content({ S, upd, say, tokenOf }) {
       <h3 style={{ marginTop: 20 }}>Announcements</h3>
       <div className="card"><div className="row"><input placeholder="Title" value={nt} onChange={e => setNt(e.target.value)} /><input placeholder="Message" value={nx} onChange={e => setNx(e.target.value)} /><button className="btn" onClick={() => { if (nt) { upd(n => { n.news.push({ title: nt, text: nx, date: new Date().toDateString() }); }); setNt(''); setNx(''); } }}>Post</button></div>
         {S.news.map((n, i) => <p key={i}>{n.title} <button className="btn sm bad" onClick={() => upd(x => { x.news.splice(i, 1); })}>x</button></p>)}</div>
+    </>
+  );
+}
+
+// Department of International Relations site: the front page (/), its events, news and extra pages.
+function Dept({ S, upd, say, tokenOf }) {
+  const D = S.ir, put = fn => upd(n => fn(n.ir));
+  const F = (k, l, area) => <div style={area ? { gridColumn: '1 / -1' } : null}><label>{l}</label>{area ? <textarea value={D[k] || ''} onChange={e => put(x => { x[k] = e.target.value; })} /> : <input value={D[k] || ''} onChange={e => put(x => { x[k] = e.target.value; })} />}</div>;
+  const List = ({ k, fields, blank, label }) => <>{(D[k] || []).map((it, i) => <div className="card" style={{ marginBottom: 10 }} key={i}>
+    <div className="row">{fields.filter(f => !f[2]).map(([f, l]) => <div key={f}><label>{l}</label><input value={it[f] || ''} onChange={e => put(x => { x[k][i][f] = e.target.value; })} /></div>)}</div>
+    {fields.filter(f => f[2] === 'area').map(([f, l]) => <div key={f}><label>{l}</label><textarea style={f === 'body' ? { minHeight: 220 } : null} value={it[f] || ''} onChange={e => put(x => { x[k][i][f] = e.target.value; })} /></div>)}
+    {fields.filter(f => f[2] === 'check').map(([f, l]) => <label key={f} style={{ fontWeight: 400, display: 'flex', gap: 8, alignItems: 'center' }}><input type="checkbox" style={{ width: 'auto' }} checked={!!it[f]} onChange={e => put(x => { x[k][i][f] = e.target.checked; })} /> {l}</label>)}
+    {k === 'events' && <><label>Picture (square)</label>{it.image && <img src={it.image} alt="" style={{ width: 56, height: 56, objectFit: 'contain', verticalAlign: 'middle' }} />} <input type="file" accept="image/*" style={{ width: 'auto' }} onChange={e => pic(i, e.target.files[0])} /></>}
+    {k === 'pages' && it.slug && <p className="mini">Address: <a href={'/' + it.slug} target="_blank" rel="noopener noreferrer">/{it.slug}</a></p>}
+    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>{i > 0 && <button className="btn sm alt" onClick={() => put(x => { const a = x[k]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; })}>Move up</button>}<button className="btn sm bad" onClick={() => { if (confirm('Remove this item?')) put(x => { x[k].splice(i, 1); }); }}>Remove</button></div>
+  </div>)}<button className="btn alt" onClick={() => put(x => { x[k] = [...(x[k] || []), { ...blank }]; })}>{label}</button></>;
+  function pic(i, file) {
+    if (!file) return; const im = new Image();
+    im.onload = async () => {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 192; const m = Math.min(im.width, im.height); cv.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, 192, 192);
+      const dataUrl = cv.toDataURL('image/png'); let url = dataUrl;
+      try { url = (await api('upload', 'POST', { name: 'event-' + Date.now() + '.png', dataUrl }, tokenOf())).url; } catch (e) { if (e.status !== 501) { say('Upload failed: ' + e.message); return; } }
+      put(x => { x.events[i].image = url; }); say('Picture saved');
+    };
+    im.src = URL.createObjectURL(file);
+  }
+  return (
+    <>
+      <p className="mini">This is the front page of the website (<a href="/" target="_blank" rel="noopener noreferrer">open it</a>). UOK MUN is one of the department events. Changes save automatically and go live at once.</p>
+      <h3>Department details</h3>
+      <div className="card"><div className="row">{F('name', 'Department name')}{F('uni', 'University line')}{F('tagline', 'Tagline')}{F('email', 'Public email')}{F('phone', 'Public phone')}{F('address', 'Address')}</div>
+        {F('about', 'About the department', true)}{F('vision', 'Vision (optional)', true)}</div>
+      <h3 style={{ marginTop: 20 }}>Programmes</h3>
+      {List({ k: 'programmes', fields: [['name', 'Programme name'], ['text', 'Short description', 'area']], blank: { name: 'New programme', text: '' }, label: "Add programme" })}
+      <h3 style={{ marginTop: 20 }}>Events</h3>
+      <p className="mini">Each event shows as a card on the front page. Link: a page of this site (for example /uokmun) or a full https address.</p>
+      {List({ k: 'events', fields: [['title', 'Event name'], ['date', 'Date (any text)'], ['link', 'Link'], ['text', 'Short description', 'area'], ['live', 'Show an "Open" badge (registration or event running)', 'check']], blank: { title: 'New event', date: '', text: '', link: '', image: '', live: false }, label: "Add event" })}
+      <h3 style={{ marginTop: 20 }}>News and notices</h3>
+      {List({ k: 'news', fields: [['title', 'Title'], ['date', 'Date'], ['text', 'Text', 'area']], blank: { title: 'New notice', date: new Date().toDateString(), text: '' }, label: "Add notice" })}
+      <h3 style={{ marginTop: 20 }}>Extra pages</h3>
+      <p className="mini">Create new pages for the department (for example Faculty, Admissions, Research). Page address: small letters and hyphens, for example faculty. Text: a line starting with "## " is a heading, lines starting with "- " make a list, an empty line starts a new paragraph.</p>
+      {List({ k: 'pages', fields: [['title', 'Page title'], ['slug', 'Page address'], ['body', 'Page text', 'area'], ['nav', 'Show in the top menu', 'check']], blank: { title: 'New page', slug: 'new-page', body: '', nav: true }, label: "Add page" })}
     </>
   );
 }

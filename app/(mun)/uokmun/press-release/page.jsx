@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
-import { getPublic } from '../../lib/data';
+import { getPublic } from '@/lib/data';
 
 export const revalidate = 60;
 export const metadata = { title: 'Press Release | UOK MUN' };
 
 export default async function PressRelease() {
   const { site: z, docs } = await getPublic();
-  if (!z.showDocuments) redirect('/');
+  if (!z.showDocuments) redirect('/uokmun');
   return (
     <>
       <h1 className="ph">Press Release</h1>

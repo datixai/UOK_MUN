@@ -1,4 +1,4 @@
-import { getPublic } from '../../lib/data';
+import { getPublic } from '@/lib/data';
 import RegisterForm from './RegisterForm';
 
 export const revalidate = 60;

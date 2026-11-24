@@ -1,4 +1,4 @@
 import Portal from './Portal';
 
-export const metadata = { title: 'Delegate portal | UOK MUN' };
+export const metadata = { title: 'Member portal | UOK MUN' };
 export default function Page() { return <Portal />; }
