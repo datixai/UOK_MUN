@@ -21,7 +21,7 @@ const tagc = s => (s === 'approved' ? 'ok' : s === 'rejected' ? 'bad' : 'warn');
 export default function Admin() {
   const [token, setToken] = useState(''), [S, setS] = useState(null), [tab, setTab] = useState('dash'), [sync, setSync] = useState(''), [toast, setToast] = useState('');
   const [adminSet, setAdminSet] = useState(true);
-  const known = useRef(new Set()), timer = useRef(), tokRef = useRef(''), toastT = useRef();
+  const known = useRef(new Set()), timer = useRef(), tokRef = useRef(''), toastT = useRef(), latest = useRef(null), dirty = useRef(false);
   const say = m => { setToast(m); clearTimeout(toastT.current); toastT.current = setTimeout(() => setToast(''), 2800); };
 
   useEffect(() => { api('public').then(p => setAdminSet(!!p.adminSet)).catch(() => {}); try { const t = sessionStorage.getItem('uokmun_t'); if (t) enter(t, true); } catch (e) {} }, []);
@@ -38,10 +38,21 @@ export default function Admin() {
       if (extra.length) setS(s => ({ ...s, regs: [...s.regs, ...extra] }));
       const sent = new Map((st.members || []).map(m => [m.id, m]));
       setS(s => s && ({ ...s, members: s.members.map(m => { const o = sent.get(m.id); if (!o || (!m.setPw && !m.resetPw)) return m; const { setPw, resetPw, ...rest } = m; return { ...rest, ...(setPw !== o.setPw ? { setPw } : {}), ...(resetPw !== o.resetPw ? { resetPw } : {}), ...(o.setPw && !rest.hasAccount ? { hasAccount: true } : {}) }; }) }));
-      setSync('Saved');
-    } catch (e) { if (e.status === 401) { setToken(''); say('Session expired. Log in again.'); } else setSync('Save failed'); }
+      if (latest.current === st) { dirty.current = false; setSync('Saved'); } // a newer edit may already be waiting
+      return true;
+    } catch (e) { if (e.status === 401) { setToken(''); say('Session expired. Log in again.'); } else { setSync('Save failed'); say('Save failed. Check the internet and press Save again.'); } return false; }
   }
-  const upd = fn => { const n = structuredClone(S); fn(n); setS(n); clearTimeout(timer.current); setSync('Saving...'); timer.current = setTimeout(() => push(n), 500); };
+  const upd = fn => { const n = structuredClone(S); fn(n); setS(n); latest.current = n; dirty.current = true; clearTimeout(timer.current); setSync('Saving...'); timer.current = setTimeout(() => push(n), 500); }; // saves by itself shortly after each change
+  async function saveNow() { // the Save button: sends everything at once and confirms
+    clearTimeout(timer.current);
+    if (!latest.current) { setSync('Saved'); say('All changes are saved'); return; }
+    setSync('Saving...');
+    if (await push(latest.current)) say('All changes are saved and live on the website');
+  }
+  useEffect(() => { // warn before closing the tab while a change is still being saved
+    const f = e => { if (dirty.current) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', f); return () => window.removeEventListener('beforeunload', f);
+  }, []);
   useEffect(() => { // light check every 30 s (tiny request); the full data is fetched only when something changed
     if (!token) return;
     let last = null;
@@ -73,7 +84,8 @@ export default function Admin() {
       <div className="tabs noprint">
         {TABS.map(([k, t]) => <a key={k} href="#" className={tab === k ? 'on' : ''} onClick={e => { e.preventDefault(); setTab(k); }}>{t}</a>)}
         <a href="#" onClick={e => { e.preventDefault(); try { sessionStorage.removeItem('uokmun_t'); } catch (x) {} setToken(''); setS(null); }}>Log out</a>
-        <span className="sync">{sync || 'Live server'}</span>
+        <span className="sync">{sync === 'Save failed' ? <b style={{ color: '#ffb0a8' }}>Not saved</b> : sync || 'Live server'}</span>
+        <button className={'btn sm ' + (sync === 'Saved' || !sync ? 'ok' : '')} style={{ alignSelf: 'center' }} onClick={saveNow} disabled={sync === 'Saving...'}>{sync === 'Saving...' ? 'Saving...' : sync === 'Saved' ? 'Saved' : 'Save'}</button>
       </div>
       {tab === 'dash' && <Dash {...P} />}{tab === 'regs' && <Regs {...P} />}{tab === 'members' && <Members {...P} />}{tab === 'roll' && <Roll {...P} />}
       {tab === 'floor' && <Floor {...P} />}{tab === 'score' && <Score {...P} />}{tab === 'content' && <Content {...P} />}{tab === 'dept' && <Dept {...P} />}{tab === 'data' && <Data {...P} />}
